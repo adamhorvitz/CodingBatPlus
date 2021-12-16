@@ -5,6 +5,27 @@ from bs4 import BeautifulSoup
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
+import mechanize
+import urllib3
+import http.cookiejar ## http.cookiejar in python3
+
+cj = http.cookiejar.CookieJar()
+br = mechanize.Browser()
+br.set_cookiejar(cj)
+br.open("https://www.codingbat.com")
+
+br.select_form(nr=0)
+print(mechanize.HTMLForm)
+for field_name in br.forms():
+    print("field name: ")
+    print(field_name)
+
+
+
+br.form['uname'] = 'username'
+br.form['pw'] = 'password.'
+br.submit()
+print(br.response().read())
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
