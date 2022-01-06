@@ -2,7 +2,6 @@ import requests
 import smtplib
 from pprint import pprint
 from bs4 import BeautifulSoup
-from bs4 import BeautifulSoup as bs
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from requests import Session
@@ -54,10 +53,10 @@ def database():
         home_page = s.get("https://codingbat.com/report")
         #print(home_page.content)
 
-    with open("/Users/adamhorvitz/PycharmProjects/pythonProject/CodingBat Teacher Report.html") as page:
-        soupTest = BeautifulSoup(page, 'html.parser')
-        #pprint(soupTest)
-        print("PRINTING HERE, READ BELOW")
+  # #  with open("/Users/adamhorvitz/PycharmProjects/pythonProject/CodingBat Teacher Report.html") as page:
+  #       soupTest = BeautifulSoup(page, 'html.parser')
+  #       #pprint(soupTest)
+  #   #    print("PRINTING HERE, READ BELOW")
 
     soup = BeautifulSoup(home_page.content, 'html.parser')
     #pprint(soup)
