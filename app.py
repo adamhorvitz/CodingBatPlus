@@ -2,30 +2,12 @@ import requests
 import smtplib
 from pprint import pprint
 from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup as bs
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
+from requests import Session
 from datetime import datetime
-import mechanize
-import urllib3
-import http.cookiejar ## http.cookiejar in python3
 
-cj = http.cookiejar.CookieJar()
-br = mechanize.Browser()
-br.set_cookiejar(cj)
-br.open("https://www.codingbat.com")
-
-br.select_form(nr=0)
-print(mechanize.HTMLForm)
-for field_name in br.forms():
-    print("field name: ")
-    print(field_name)
-
-
-
-br.form['uname'] = 'username'
-br.form['pw'] = 'password.'
-br.submit()
-print(br.response().read())
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
@@ -57,26 +39,50 @@ class Category(db.Model):
 def database():
     db.drop_all()
     db.create_all()
+
+    home_page = None
+    with Session() as s:
+        header = {
+            "Host": "codingbat.com",
+            "Origin": "https://codingbat.com",
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+            "Content-Type": "application/x-www-form-urlencoded"
+        }
+        login_data = {"uname": "andre.chmielewski@nbps.org", "pw": "Carambola3993", "dologin": "log in", "fromurl": "/java"}
+        s.post("https://codingbat.com/login", data=login_data, headers=header)
+        home_page = s.get("https://codingbat.com/report")
+        #print(home_page.content)
+
     with open("/Users/adamhorvitz/PycharmProjects/pythonProject/CodingBat Teacher Report.html") as page:
-        soup = BeautifulSoup(page, 'html.parser')
-    print("running database method!")
-    tbody = soup.find_all('tbody')[2]
+        soupTest = BeautifulSoup(page, 'html.parser')
+        #pprint(soupTest)
+        print("PRINTING HERE, READ BELOW")
+
+    soup = BeautifulSoup(home_page.content, 'html.parser')
+    #pprint(soup)
+    tbody = soup.find_all('table')[2]
+    #pprint(tbody)
 
     emailList = []
-    for x in range(2, len(tbody) - 2):
-        tr = tbody.find_all('tr')[x]
+    tr = tbody.find_all('tr')
+    print("length of tbody is " + str(len(tr)))
+
+    for x in range(2, len(tr)):
+        print(tr[x])
         # email = tr.find_all(
         #     "a", string=lambda text: "@" in text.lower()
         # )
-        row_data = tr.findAll("td")
+        row_data = tr[x].findAll("td")
+        print("Row data is " + str(row_data))
         email = row_data[0].findAll(text=True)[0]
         memo = row_data[1].findAll(text=True)
         points = row_data[-1].findAll(text=True)
-        # If the array has a value parse it out and replace the value
+        # # If the array has a value parse it out and replace the value
         if len(memo) == 0:
-            memo = "No Memo"
+             memo = "No Memo"
         else:
-            memo = memo[0]
+             memo = memo[0]
 
         if len(points) != 0:
             points = float(points[0])
@@ -94,7 +100,7 @@ def database():
         emailList.append([email, memo, points])
 
     db.session.commit()
-    # pprint(emailList)
+    pprint(emailList)
 
 
 
