@@ -40,25 +40,24 @@ def database():
     db.create_all()
 
     home_page = None
-    with Session() as s:
-        header = {
-            "Host": "codingbat.com",
-            "Origin": "https://codingbat.com",
-            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36",
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
-            "Content-Type": "application/x-www-form-urlencoded"
-        }
-        login_data = {"uname": "andre.chmielewski@nbps.org", "pw": "Carambola3993", "dologin": "log in", "fromurl": "/java"}
-        s.post("https://codingbat.com/login", data=login_data, headers=header)
-        home_page = s.get("https://codingbat.com/report")
-        #print(home_page.content)
+    # with Session() as s:
+    #     header = {
+    #         "Host": "codingbat.com",
+    #         "Origin": "https://codingbat.com",
+    #         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36",
+    #         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+    #         "Content-Type": "application/x-www-form-urlencoded"
+    #     }
+    #     login_data = {"uname": "andre.chmielewski@nbps.org", "pw": "Carambola3993", "dologin": "log in", "fromurl": "/java"}
+    #     s.post("https://codingbat.com/login", data=login_data, headers=header)
+    #     home_page = s.get("https://codingbat.com/report")
+    #     #print(home_page.content)
 
-  # #  with open("/Users/adamhorvitz/PycharmProjects/pythonProject/CodingBat Teacher Report.html") as page:
-  #       soupTest = BeautifulSoup(page, 'html.parser')
+    with app.open_resource('static/CodingBat Teacher Report.html') as page:
+        soup = BeautifulSoup(page, 'html.parser')
   #       #pprint(soupTest)
-  #   #    print("PRINTING HERE, READ BELOW")
 
-    soup = BeautifulSoup(home_page.content, 'html.parser')
+   # soup = BeautifulSoup(home_page.content, 'html.parser')
     #pprint(soup)
     tbody = soup.find_all('table')[2]
     #pprint(tbody)
