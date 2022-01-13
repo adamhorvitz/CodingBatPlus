@@ -77,22 +77,21 @@ def database():
 
         # 1. Check if the student already exists in the Student table
         student = Student.query.filter_by(email=email).first()
-        print(student)
+
         if student is None:
             # 2. If doesn't exist, create a new student object with email and memo, and save ID as a variable
             student = Student(
                 email=email,
-                memo=memo,
-                id=x-2
+                memo=memo
+                # id=x-2
             )
-        print(student.email, student.memo, student.id)
-        student_id = student.id
-        # print(student.email)
+
+
         # 3. If it already exists, save the ID as a variable
 
         # 4. Create the Scrape object with date, points, and Student_ID
         scrape = Scrape(
-            student_id=student_id,
+            student=student,
             points=points
         )
         # print(scrape)
@@ -100,7 +99,7 @@ def database():
         # 5. Commit and add to database
 
         # pprint(student.email + ", " + student.memo + ", " + str(student.points) + ", " + str(student.date))
-        db.session.add(student)
+        # db.session.add(student)
         db.session.add(scrape)
         emailList.append([email, memo, points])
 
@@ -161,7 +160,7 @@ def view_posts():
     students = Student.query.all()
     date = Scrape.query.order_by(Scrape.date).first().date
     scrapes = Scrape.query.filter_by(date=date).all()
-    # print(scrapes[0].student_id)
+    print(scrapes[0].student.id)
     return render_template("database.html", posts=students, scrapes=scrapes)
 
 
