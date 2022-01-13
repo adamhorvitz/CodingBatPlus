@@ -5,8 +5,10 @@ from bs4 import BeautifulSoup
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from requests import Session
-from datetime import datetime
-
+import time
+import atexit
+from apscheduler.schedulers.background import BackgroundScheduler
+from datetime import datetime, date
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
@@ -14,25 +16,10 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite3'
 db = SQLAlchemy(app)
 app.secret_key = 'the random string'
 
+
 @app.before_first_request
 def create_tables():
     db.create_all()
-
-class Post(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    points = db.Column(db.Float, nullable=False)
-    email = db.Column(db.String(255), nullable=False)
-    memo = db.Column(db.String(255), nullable=False)
-
-    def __repr__(self):
-        return '<Post %r>' % self.title
-
-class Category(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50), nullable=False, unique=True, autoincrement=True)
-
-    def __repr__(self):
-        return '<Category %r>' % self.name
 
 
 def database():
@@ -55,32 +42,32 @@ def database():
 
     with app.open_resource('static/CodingBat Teacher Report.html') as page:
         soup = BeautifulSoup(page, 'html.parser')
-  #       #pprint(soupTest)
+    #       #pprint(soupTest)
 
-   # soup = BeautifulSoup(home_page.content, 'html.parser')
-    #pprint(soup)
+    # soup = BeautifulSoup(home_page.content, 'html.parser')
+    # pprint(soup)
     tbody = soup.find_all('table')[2]
-    #pprint(tbody)
+    # pprint(tbody)
 
     emailList = []
     tr = tbody.find_all('tr')
-    print("length of tbody is " + str(len(tr)))
+    # print("length of tbody is " + str(len(tr)))
 
     for x in range(2, len(tr)):
-        print(tr[x])
+        # print(tr[x])
         # email = tr.find_all(
         #     "a", string=lambda text: "@" in text.lower()
         # )
         row_data = tr[x].findAll("td")
-        print("Row data is " + str(row_data))
+        # print("Row data is " + str(row_data))
         email = row_data[0].findAll(text=True)[0]
         memo = row_data[1].findAll(text=True)
         points = row_data[-1].findAll(text=True)
         # # If the array has a value parse it out and replace the value
         if len(memo) == 0:
-             memo = "No Memo"
+            memo = "No Memo"
         else:
-             memo = memo[0]
+            memo = memo[0]
 
         if len(points) != 0:
             points = float(points[0])
@@ -88,42 +75,104 @@ def database():
         else:
             points = 0.0
 
-        post = Post(
-            email=email,
-            memo=memo,
+        # 1. Check if the student already exists in the Student table
+        student = Student.query.filter_by(email=email).first()
+        print(student)
+        if student is None:
+            # 2. If doesn't exist, create a new student object with email and memo, and save ID as a variable
+            student = Student(
+                email=email,
+                memo=memo,
+                id=x-2
+            )
+        print(student.email, student.memo, student.id)
+        student_id = student.id
+        # print(student.email)
+        # 3. If it already exists, save the ID as a variable
+
+        # 4. Create the Scrape object with date, points, and Student_ID
+        scrape = Scrape(
+            student_id=student_id,
             points=points
         )
-        db.session.add(post)
-        # db.session.commit()
+        # print(scrape)
+
+        # 5. Commit and add to database
+
+        # pprint(student.email + ", " + student.memo + ", " + str(student.points) + ", " + str(student.date))
+        db.session.add(student)
+        db.session.add(scrape)
         emailList.append([email, memo, points])
 
     db.session.commit()
-    pprint(emailList)
+    # pprint(emailList)
 
 
+def print_date_time():
+    print(time.strftime("%A, %d. %B %Y %I:%M:%S %p"))
+
+
+class Student(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    # points = db.Column(db.Float, nullable=False)
+    email = db.Column(db.String(255), nullable=False)
+    memo = db.Column(db.String(255), nullable=False)
+    scrapes = db.relationship('Scrape', backref='student', lazy=False)
+
+    # date = db.Column(db.Date, default=date.today())
+
+    def __repr__(self):
+        return '<Student %r>' % self.id
+
+
+class Scrape(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    points = db.Column(db.Float, nullable=False)
+    date = db.Column(db.Date, default=date.today())
+    student_id = db.Column(db.Integer, db.ForeignKey('student.id'), nullable=True)
+    # student = db.relationship('Student', backref=db.backref('students', lazy=True))
+
+    def __repr__(self):
+        return '<Scrape %r>' % self.id
+
+
+class Category(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False, unique=True, autoincrement=True)
+
+    def __repr__(self):
+        return '<Category %r>' % self.name
 
 
 @app.route('/')
 def index():  # put application's code here
     return render_template("index.html")
 
+
 @app.route('/settings', methods=['GET', 'POST'])
 def settings():
-        return render_template("/settings.html")
+    return render_template("/settings.html")
 
 
 @app.route('/database', methods=['GET', 'POST'])
 def view_posts():
     print("opening database.html")
     database()
-    posts = Post.query.all()
-    return render_template("database.html", posts=posts)
+    students = Student.query.all()
+    date = Scrape.query.order_by(Scrape.date).first().date
+    scrapes = Scrape.query.filter_by(date=date).all()
+    # print(scrapes[0].student_id)
+    return render_template("database.html", posts=students, scrapes=scrapes)
 
 
+scheduler = BackgroundScheduler()
+scheduler.add_job(func=database, trigger="interval", days=7)
+scheduler.start()
+
+# Shut down the scheduler when exiting the app
+atexit.register(lambda: scheduler.shutdown())
 
 if __name__ == '__main__':
     db.drop_all()
     db.create_all()
     app.run(debug=True)
-
-

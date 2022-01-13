@@ -8,30 +8,35 @@ CodingBat+ Database
 
 <h1>CodingBat+ Database</h1>
 
+<br>
+
 <table class="table">
   <thead>
     <tr>
-      <th scope="col">#</th>
+      <th scope="col">ID</th>
+      <th scope="col">Date</th>
         <th scope="col">Email</th>
-      <th scope="col">Memo</th>
       <th scope="col">Points</th>
     </tr>
   </thead>
   <tbody>
-  {% for post in posts %}
+  {% for scrape in scrapes %}
     <tr>
-      <th scope="row">{{ post.id }}</th>
-      <td><b>{{post.email}}</b></td>
-        <td>{{post.memo}}</td>
-        <td>{{post.points}}</td>
-    <td>
+      <th scope="row">{{ scrape.student.id }}</th>
+      <td><b>{{scrape.date}}</b></td>
+      <td><b>{{scrape.student.email}}</b></td>
+        <td>{{scrape.points}}</td>
+      <td>
 </td>
 
     <td>
     </td>
     </tr>
 
+
+
 {% endfor %}
+
   </tbody>
 </table>
 
