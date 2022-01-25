@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Student
+{% endblock %}
+
+{% block content %}
+
+<br><br><br>
+
+<h1>Student Info For {{ student.memo }}</h1>
+<br>
+<p>Email: {{ student.email }}</p>
+<p>Grade: Placeholder</p>
+<p>Year of Graduation: Placeholder</p>
+<p>Class: Placeholder</p>
+<p>Grade: Placeholder</p><br><br>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th scope="col">Date</th>
+      <th scope="col">Total Points</th>
+      <th scope="col">Change</th>
+      <th scope="col">Ranking</th>
+    </tr>
+  </thead>
+  <tbody>
+{% for scrape in scrapes %}
+    <tr>
+      <th scope="row">{{scrape.date }}</th>
+      <td><b>{{scrape.points}}</b></td>
+      <td><b>Placeholder</b></td>
+        <td>Placeholder</td>
+      <td>
+</td>
+
+    <td>
+    </td>
+    </tr>
+
+{% endfor %}
+  </tbody>
+</table>
+
+
+
+{% endblock %}

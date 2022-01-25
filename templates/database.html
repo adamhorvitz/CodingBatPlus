@@ -13,19 +13,23 @@ CodingBat+ Database
 <table class="table">
   <thead>
     <tr>
-      <th scope="col">ID</th>
-      <th scope="col">Date</th>
-        <th scope="col">Email</th>
+      <th scope="col">Ranking</th>
+      <th scope="col">Memo</th>
+      <th scope="col">Email</th>
       <th scope="col">Points</th>
+      <th scope="col">Date Scraped</th>
+      <th scope="col">Change (+-)</th>
     </tr>
   </thead>
   <tbody>
   {% for scrape in scrapes %}
     <tr>
       <th scope="row">{{ scrape.student.id }}</th>
-      <td><b>{{scrape.date}}</b></td>
+      <td><b><a href="/student/{{ scrape.student.id }}" class="card-link">{{scrape.student.memo}}</a></b></td>
       <td><b>{{scrape.student.email}}</b></td>
         <td>{{scrape.points}}</td>
+      <td>{{scrape.date}}</td>
+        <td>+10.0</td>
       <td>
 </td>
 

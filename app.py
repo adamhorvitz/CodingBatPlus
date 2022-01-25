@@ -27,24 +27,25 @@ def database():
     db.create_all()
 
     home_page = None
-    # with Session() as s:
-    #     header = {
-    #         "Host": "codingbat.com",
-    #         "Origin": "https://codingbat.com",
-    #         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36",
-    #         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
-    #         "Content-Type": "application/x-www-form-urlencoded"
-    #     }
-    #     login_data = {"uname": "andre.chmielewski@nbps.org", "pw": "Carambola3993", "dologin": "log in", "fromurl": "/java"}
-    #     s.post("https://codingbat.com/login", data=login_data, headers=header)
-    #     home_page = s.get("https://codingbat.com/report")
-    #     #print(home_page.content)
+    with Session() as s:
+        header = {
+            "Host": "codingbat.com",
+            "Origin": "https://codingbat.com",
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+            "Content-Type": "application/x-www-form-urlencoded"
+        }
+        login_data = {"uname": "andre.chmielewski@nbps.org", "pw": "Carambola3993", "dologin": "log in",
+                      "fromurl": "/java"}
+        s.post("https://codingbat.com/login", data=login_data, headers=header)
+        home_page = s.get("https://codingbat.com/report")
+        # print(home_page.content)
 
-    with app.open_resource('static/CodingBat Teacher Report.html') as page:
-        soup = BeautifulSoup(page, 'html.parser')
+    # with app.open_resource('static/CodingBat Teacher Report.html') as page:
+    #     soup = BeautifulSoup(page, 'html.parser')
     #       #pprint(soupTest)
 
-    # soup = BeautifulSoup(home_page.content, 'html.parser')
+    soup = BeautifulSoup(home_page.content, 'html.parser')
     # pprint(soup)
     tbody = soup.find_all('table')[2]
     # pprint(tbody)
@@ -85,7 +86,6 @@ def database():
                 memo=memo
                 # id=x-2
             )
-
 
         # 3. If it already exists, save the ID as a variable
 
@@ -129,6 +129,7 @@ class Scrape(db.Model):
     points = db.Column(db.Float, nullable=False)
     date = db.Column(db.Date, default=date.today())
     student_id = db.Column(db.Integer, db.ForeignKey('student.id'), nullable=True)
+
     # student = db.relationship('Student', backref=db.backref('students', lazy=True))
 
     def __repr__(self):
@@ -160,8 +161,16 @@ def view_posts():
     students = Student.query.all()
     date = Scrape.query.order_by(Scrape.date).first().date
     scrapes = Scrape.query.filter_by(date=date).all()
-    print(scrapes[0].student.id)
+    # print(scrapes[0].student.id)
     return render_template("database.html", posts=students, scrapes=scrapes)
+
+
+@app.route('/student/<int:scrape_student_id>', methods=['GET', 'POST'])
+def display_student(scrape_student_id):
+    if request.method == "GET":
+        fetched_student = Student.query.get(scrape_student_id)
+        scrapes = Scrape.query.filter_by(id=scrape_student_id).all()
+        return render_template("/student.html", student=fetched_student, scrapes=scrapes)
 
 
 scheduler = BackgroundScheduler()
