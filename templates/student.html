@@ -5,16 +5,22 @@ Student
 {% endblock %}
 
 {% block content %}
-
 <br><br><br>
 
-<h1>Student Info For {{ student.memo }}</h1>
-<br>
-<p>Email: {{ student.email }}</p>
-<p>Grade: Placeholder</p>
-<p>Year of Graduation: Placeholder</p>
-<p>Class: Placeholder</p>
-<p>Grade: Placeholder</p><br><br>
+
+<form method="post">
+         <input type="hidden" id="student_id" name="student_id" value="{{student.id}}">
+        <textarea name="email" id="email" rows="1" cols="30">{{ student.email }}</textarea><br>
+        <textarea name="grade" id="grade" rows="1" cols="30">{{ student.grade }}</textarea><br>
+        <textarea name="gradYear" id="gradYear" rows="1" cols="30">{{ student.gradYear }}</textarea><br>
+        <textarea name="class" id="class" rows="1" cols="30">{{ student.theClass }}</textarea><br>
+        <textarea name="period" id="period" rows="1" cols="30">{{ student.period }}</textarea><br>
+        <button type="submit" class="btn btn-primary">Save All Changes</button>
+</form>
+
+
+
+<br><br>
 
 <table class="table">
   <thead>

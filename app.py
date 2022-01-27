@@ -23,9 +23,12 @@ def create_tables():
 
 
 def database():
-    db.drop_all()
+    # db.drop_all()
     db.create_all()
 
+    # todayDate = Scrape.query.order_by(Scrape.date).first().date
+    # print(date)
+    # if todayDate != date.today() or todayDate is None:
     home_page = None
     with Session() as s:
         header = {
@@ -113,12 +116,15 @@ def print_date_time():
 
 class Student(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    # points = db.Column(db.Float, nullable=False)
     email = db.Column(db.String(255), nullable=False)
     memo = db.Column(db.String(255), nullable=False)
-    scrapes = db.relationship('Scrape', backref='student', lazy=False)
 
-    # date = db.Column(db.Date, default=date.today())
+    grade = db.Column(db.Integer, default=9)
+    gradYear = db.Column(db.Integer, default=2026)
+    theClass = db.Column(db.String(255), default="AP Computer Science A")
+    period = db.Column(db.Integer, default=1)
+
+    scrapes = db.relationship('Scrape', backref='student', lazy=False)
 
     def __repr__(self):
         return '<Student %r>' % self.id
@@ -171,6 +177,18 @@ def display_student(scrape_student_id):
         fetched_student = Student.query.get(scrape_student_id)
         scrapes = Scrape.query.filter_by(id=scrape_student_id).all()
         return render_template("/student.html", student=fetched_student, scrapes=scrapes)
+    else:
+        fetched_student = Student.query.get(scrape_student_id)
+
+        fetched_student.email = request.form["email"]
+        fetched_student.grade = request.form["grade"]
+        fetched_student.gradYear = request.form["gradYear"]
+        fetched_student.period = request.form["period"]
+        fetched_student.theClass = request.form["class"]
+        db.session.commit()
+
+        scrapes = Scrape.query.filter_by(id=scrape_student_id).all()
+        return render_template("/student.html", student=fetched_student, scrapes=scrapes)
 
 
 scheduler = BackgroundScheduler()
@@ -181,6 +199,6 @@ scheduler.start()
 atexit.register(lambda: scheduler.shutdown())
 
 if __name__ == '__main__':
-    db.drop_all()
+    # db.drop_all()
     db.create_all()
     app.run(debug=True)
