@@ -57,57 +57,59 @@ def database():
     tr = tbody.find_all('tr')
     # print("length of tbody is " + str(len(tr)))
 
-    for x in range(2, len(tr)):
-        # print(tr[x])
-        # email = tr.find_all(
-        #     "a", string=lambda text: "@" in text.lower()
-        # )
-        row_data = tr[x].findAll("td")
-        # print("Row data is " + str(row_data))
-        email = row_data[0].findAll(text=True)[0]
-        memo = row_data[1].findAll(text=True)
-        points = row_data[-1].findAll(text=True)
-        # # If the array has a value parse it out and replace the value
-        if len(memo) == 0:
-            memo = "No Memo"
-        else:
-            memo = memo[0]
+    last_scrape_entry = Scrape.query.order_by(Scrape.date).first()
+    if last_scrape_entry is None or (last_scrape_entry is not None and last_scrape_entry.date != date.today()):
+        for x in range(2, len(tr)):
+            # print(tr[x])
+            # email = tr.find_all(
+            #     "a", string=lambda text: "@" in text.lower()
+            # )
+            row_data = tr[x].findAll("td")
+            # print("Row data is " + str(row_data))
+            email = row_data[0].findAll(text=True)[0]
+            memo = row_data[1].findAll(text=True)
+            points = row_data[-1].findAll(text=True)
+            # # If the array has a value parse it out and replace the value
+            if len(memo) == 0:
+                memo = "No Memo"
+            else:
+                memo = memo[0]
 
-        if len(points) != 0:
-            points = float(points[0])
-        # Else replace the value with 0
-        else:
-            points = 0.0
+            if len(points) != 0:
+                points = float(points[0])
+            # Else replace the value with 0
+            else:
+                points = 0.0
 
-        # 1. Check if the student already exists in the Student table
-        student = Student.query.filter_by(email=email).first()
+            # 1. Check if the student already exists in the Student table
+            student = Student.query.filter_by(email=email).first()
 
-        if student is None:
-            # 2. If doesn't exist, create a new student object with email and memo, and save ID as a variable
-            student = Student(
-                email=email,
-                memo=memo
-                # id=x-2
+            if student is None:
+                # 2. If doesn't exist, create a new student object with email and memo, and save ID as a variable
+                student = Student(
+                    email=email,
+                    memo=memo
+                    # id=x-2
+                )
+
+            # 3. If it already exists, save the ID as a variable
+
+            # 4. Create the Scrape object with date, points, and Student_ID
+            scrape = Scrape(
+                student=student,
+                points=points
             )
+            # print(scrape)
 
-        # 3. If it already exists, save the ID as a variable
+            # 5. Commit and add to database
 
-        # 4. Create the Scrape object with date, points, and Student_ID
-        scrape = Scrape(
-            student=student,
-            points=points
-        )
-        # print(scrape)
+            # pprint(student.email + ", " + student.memo + ", " + str(student.points) + ", " + str(student.date))
+            # db.session.add(student)
+            db.session.add(scrape)
+            emailList.append([email, memo, points])
 
-        # 5. Commit and add to database
-
-        # pprint(student.email + ", " + student.memo + ", " + str(student.points) + ", " + str(student.date))
-        # db.session.add(student)
-        db.session.add(scrape)
-        emailList.append([email, memo, points])
-
-    db.session.commit()
-    # pprint(emailList)
+        db.session.commit()
+        # pprint(emailList)
 
 
 def print_date_time():
@@ -162,13 +164,38 @@ def settings():
 
 @app.route('/database', methods=['GET', 'POST'])
 def view_posts():
-    print("opening database.html")
-    database()
-    students = Student.query.all()
-    date = Scrape.query.order_by(Scrape.date).first().date
-    scrapes = Scrape.query.filter_by(date=date).all()
-    # print(scrapes[0].student.id)
-    return render_template("database.html", posts=students, scrapes=scrapes)
+    if request.method == "GET":
+        # # print("opening database.html")
+        # database()
+        students = Student.query.all()
+        date = Scrape.query.order_by(Scrape.date).first().date
+        scrapes = Scrape.query.filter_by(date=date).all()
+        # print(scrapes[0].student.id)
+        return render_template("database.html", posts=students, scrapes=scrapes)
+
+
+@app.route('/database/points', methods=['GET', 'POST'])
+def points():
+    if request.method == "GET":
+        # database()
+        students = Student.query.all()
+        # points = Scrape.query.order_by(Scrape.points).first().points
+        date = Scrape.query.order_by(Scrape.date).first().date
+        scrapes = Scrape.query.order_by(Scrape.points.desc()).filter_by(date=date).all()
+
+        return render_template("database.html", posts=students, scrapes=scrapes)
+
+
+@app.route('/database/change', methods=['GET', 'POST'])
+def change():
+    if request.method == "GET":
+        # database()
+        students = Student.query.all()
+        # points = Scrape.query.order_by(Scrape.points).first().points
+        date = Scrape.query.order_by(Scrape.date).first().date
+        scrapes = Scrape.query.order_by(Scrape.points.desc()).filter_by(date=date).all()
+
+        return render_template("database.html", posts=students, scrapes=scrapes)
 
 
 @app.route('/student/<int:scrape_student_id>', methods=['GET', 'POST'])
@@ -202,3 +229,4 @@ if __name__ == '__main__':
     # db.drop_all()
     db.create_all()
     app.run(debug=True)
+    database()
