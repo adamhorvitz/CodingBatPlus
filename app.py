@@ -7,24 +7,36 @@ from flask_sqlalchemy import SQLAlchemy
 from requests import Session
 import time
 import atexit
-from apscheduler.schedulers.background import BackgroundScheduler
+# from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime, date
+from flask_apscheduler import APScheduler
 
 app = Flask(__name__)
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite3'
 db = SQLAlchemy(app)
 app.secret_key = 'the random string'
 
 
-@app.before_first_request
-def create_tables():
-    db.create_all()
+class Config:
+    SCHEDULER_API_ENABLED = True
+    SCHEDULER_TIMEZONE = "America/New_York"
 
 
+app.config.from_object(Config())
+
+scheduler = APScheduler()
+# scheduler.add_job(func=database, trigger="interval", days=7)
+scheduler.init_app(app)
+scheduler.start()
+
+
+@scheduler.task('interval', id='database', days=1, misfire_grace_time=900)
 def database():
+    print("RUNNING DATABASE")
     # db.drop_all()
-    db.create_all()
+    # db.create_all()
 
     # todayDate = Scrape.query.order_by(Scrape.date).first().date
     # print(date)
@@ -218,15 +230,12 @@ def display_student(scrape_student_id):
         return render_template("/student.html", student=fetched_student, scrapes=scrapes)
 
 
-scheduler = BackgroundScheduler()
-scheduler.add_job(func=database, trigger="interval", days=7)
-scheduler.start()
+# # Shut down the scheduler when exiting the app
+# atexit.register(lambda: scheduler.shutdown())
 
-# Shut down the scheduler when exiting the app
-atexit.register(lambda: scheduler.shutdown())
 
 if __name__ == '__main__':
     # db.drop_all()
     db.create_all()
     app.run(debug=True)
-    database()
+    # database()
