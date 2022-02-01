@@ -1,6 +1,9 @@
 import requests
 import smtplib
 from pprint import pprint
+import os
+from dotenv import load_dotenv
+from os import environ
 from bs4 import BeautifulSoup
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
@@ -12,11 +15,12 @@ from datetime import datetime, date
 from flask_apscheduler import APScheduler
 
 app = Flask(__name__)
+load_dotenv()
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite3'
+app.config['SQLALCHEMY_DATABASE_URI'] = environ.get('SQLALCHEMY_DATABASE_URI')
 db = SQLAlchemy(app)
-app.secret_key = 'the random string'
+app.secret_key = environ.get('APP_SECRET_KEY')
 
 
 class Config:
@@ -50,7 +54,7 @@ def database():
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
             "Content-Type": "application/x-www-form-urlencoded"
         }
-        login_data = {"uname": "andre.chmielewski@nbps.org", "pw": "Carambola3993", "dologin": "log in",
+        login_data = {"uname": environ.get('UNAME'), "pw": environ.get('PASSWORD'), "dologin": "log in",
                       "fromurl": "/java"}
         s.post("https://codingbat.com/login", data=login_data, headers=header)
         home_page = s.get("https://codingbat.com/report")
