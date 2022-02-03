@@ -13,7 +13,7 @@ CodingBat+ Database
 <table class="table">
   <thead>
     <tr>
-      <th scope="col">Ranking</th>
+      <th scope="col"><a href="/database/points" class="card-link">Ranking</a></b></th>
       <th scope="col">Memo</th>
       <th scope="col"><a href="/database" class="card-link">Email</a></b></th>
       <th scope="col"><a href="/database/points" class="card-link">Points</a></b></th>
@@ -24,7 +24,7 @@ CodingBat+ Database
   <tbody>
   {% for scrape in scrapes %}
     <tr>
-      <th scope="row">{{ scrape.student.id }}</th>
+      <th scope="row">{{ scrape.ranking }}</th>
       <td><b><a href="/student/{{ scrape.student.id }}" class="card-link">{{scrape.student.memo}}</a></b></td>
       <td><b>{{scrape.student.email}}</b></td>
         <td>{{scrape.points}}</td>

@@ -9,8 +9,6 @@ from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from requests import Session
 import time
-import atexit
-# from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime, date
 from flask_apscheduler import APScheduler
 
@@ -122,10 +120,28 @@ def database():
             # pprint(student.email + ", " + student.memo + ", " + str(student.points) + ", " + str(student.date))
             # db.session.add(student)
             db.session.add(scrape)
+
             emailList.append([email, memo, points])
 
         db.session.commit()
+        ranking()
+
         # pprint(emailList)
+
+
+def ranking():
+    date = Scrape.query.order_by(Scrape.date).first().date
+    scrapes = Scrape.query.order_by(Scrape.points.desc()).filter_by(date=date).all()
+    ranking = 1
+    for scrape in scrapes:
+        scrape.ranking = ranking
+        db.session.add(scrape)
+        # print(ranking)
+        ranking += 1
+    # ranking = []
+    # for i in scrapes:
+    #     ranking.append([i + 1])
+    db.session.commit()
 
 
 def print_date_time():
@@ -153,6 +169,7 @@ class Scrape(db.Model):
     points = db.Column(db.Float, nullable=False)
     date = db.Column(db.Date, default=date.today())
     student_id = db.Column(db.Integer, db.ForeignKey('student.id'), nullable=True)
+    ranking = db.Column(db.Integer, nullable=True)
 
     # student = db.relationship('Student', backref=db.backref('students', lazy=True))
 
@@ -169,13 +186,25 @@ class Category(db.Model):
 
 
 @app.route('/')
-def index():  # put application's code here
-    return render_template("index.html")
+def login():  # put application's code here
+    return render_template("login.html")
 
 
 @app.route('/settings', methods=['GET', 'POST'])
 def settings():
     return render_template("/settings.html")
+
+
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    if request.method == "GET":
+        return render_template("/signup.html")
+    # else:
+
+
+@app.route('/index', methods=['GET', 'POST'])
+def index():
+    return render_template("/index.html")
 
 
 @app.route('/database', methods=['GET', 'POST'])
