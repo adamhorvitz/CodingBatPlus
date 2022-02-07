@@ -202,10 +202,6 @@ def signup():
     # else:
 
 
-@app.route('/index', methods=['GET', 'POST'])
-def index():
-    return render_template("/index.html")
-
 
 @app.route('/database', methods=['GET', 'POST'])
 def view_posts():
