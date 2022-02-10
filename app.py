@@ -1,7 +1,3 @@
-import requests
-import smtplib
-from pprint import pprint
-import os
 from dotenv import load_dotenv
 from os import environ
 from bs4 import BeautifulSoup
@@ -11,6 +7,9 @@ from requests import Session
 import time
 from datetime import datetime, date
 from flask_apscheduler import APScheduler
+from flask_login import LoginManager, UserMixin, login_required, logout_user, current_user, login_user
+
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 load_dotenv()
@@ -19,6 +18,76 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 app.config['SQLALCHEMY_DATABASE_URI'] = environ.get('SQLALCHEMY_DATABASE_URI')
 db = SQLAlchemy(app)
 app.secret_key = environ.get('APP_SECRET_KEY')
+
+login_manager = LoginManager()
+login_manager.init_app(app)
+
+
+class User(UserMixin, db.Model):
+    id = db.Column(
+        db.Integer,
+        primary_key=True
+    )
+    # name = db.Column(
+    #     db.String(100),
+    #     nullable=False,
+    #     unique=False
+    # )
+    email = db.Column(
+        db.String(40),
+        unique=True,
+        nullable=False
+    )
+    password = db.Column(
+        db.String(200),
+        primary_key=False,
+        unique=False,
+        nullable=False
+    )
+
+    # website = db.Column(
+    #     db.String(60),
+    #     index=False,
+    #     unique=False,
+    #     nullable=True
+    # )
+    # created_on = db.Column(
+    #     db.DateTime,
+    #     index=False,
+    #     unique=False,
+    #     nullable=True
+    # )
+    # last_login = db.Column(
+    #     db.DateTime,
+    #     index=False,
+    #     unique=False,
+    #     nullable=True
+    # )
+
+    def set_password(self, password):
+        """Create hashed password."""
+        self.password = generate_password_hash(
+            password,
+            method='sha256'
+        )
+
+    def check_password(self, password):
+        """Check hashed password."""
+        return check_password_hash(self.password, password)
+
+    def __repr__(self):
+        return '<User {}>'.format(self.username)
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(user_id)
+
+
+@login_manager.unauthorized_handler
+def unauthorized():
+    flash("You must be logged in to view that page.")
+    return redirect(url_for("login"))
 
 
 class Config:
@@ -36,7 +105,6 @@ scheduler.start()
 
 @scheduler.task('interval', id='database', days=1, misfire_grace_time=900)
 def database():
-    print("RUNNING DATABASE")
     # db.drop_all()
     # db.create_all()
 
@@ -71,8 +139,11 @@ def database():
     tr = tbody.find_all('tr')
     # print("length of tbody is " + str(len(tr)))
 
-    last_scrape_entry = Scrape.query.order_by(Scrape.date).first()
+    last_scrape_entry = Scrape.query.order_by(Scrape.date.desc()).first()
+    # print("Last scrape entry date is " + str(last_scrape_entry.date) + " and today's date is " + str(date.today()))
+    # print(last_scrape_entry is None or (last_scrape_entry is not None and last_scrape_entry.date != date.today()))
     if last_scrape_entry is None or (last_scrape_entry is not None and last_scrape_entry.date != date.today()):
+        print("RUNNING DATABASE")
         for x in range(2, len(tr)):
             # print(tr[x])
             # email = tr.find_all(
@@ -123,14 +194,67 @@ def database():
 
             emailList.append([email, memo, points])
 
+        # flash("Database updated.")
         db.session.commit()
         ranking()
-
+        change_in_points()
         # pprint(emailList)
 
 
+# def date_deleter():
+#     date = Scrape.query.order_by(Scrape.date.desc()).first().date
+#     scrapes = Scrape.query.filter_by(date=date).all()
+#
+#     for scrape in scrapes:
+#         db.session.delete(scrape)
+#
+#     db.session.commit()
+
+
+# def rank_all():
+#     # date_deleter()  # Delete the most recent date (debug)
+#
+#     # Get all scrapes in the database
+#     scrapes = Scrape.query.all()
+#
+#     # Go through each scrape and extract ALL the dates
+#     dates = set()
+#     for scrape in scrapes:
+#         dates.add(scrape.date)
+#     print(dates)
+
+
+def change_in_points():
+    students = Student.query.all()
+    studentChange = 0
+
+    for student in students:
+        studentPoints = []
+        scrapes = Scrape.query.order_by(Scrape.date.desc()).filter_by(student_id=student.id).all()
+        # Order the scrapes for each student from most recent date to last
+        for scrape in scrapes:
+            studentPoints.append(scrape.points)
+        # print(studentPoints)
+        # Calculate the difference from current scrape and the one before
+            if len(studentPoints) != 1:
+                for x in range(0, 1):
+                    # print(studentPoints[x])
+                    change = studentPoints[x]-studentPoints[x-1]
+                    # print(change)
+                scrape.change = change
+                db.session.add(scrape)
+            else:
+                scrape.change = 0
+
+    db.session.commit()
+
+
+
+
 def ranking():
-    date = Scrape.query.order_by(Scrape.date).first().date
+    # scrapes = Scrape.query.filter_by(date=date).all()
+
+    date = Scrape.query.order_by(Scrape.date.desc()).first().date
     scrapes = Scrape.query.order_by(Scrape.points.desc()).filter_by(date=date).all()
     ranking = 1
     for scrape in scrapes:
@@ -138,9 +262,8 @@ def ranking():
         db.session.add(scrape)
         # print(ranking)
         ranking += 1
-    # ranking = []
-    # for i in scrapes:
-    #     ranking.append([i + 1])
+
+
     db.session.commit()
 
 
@@ -170,6 +293,7 @@ class Scrape(db.Model):
     date = db.Column(db.Date, default=date.today())
     student_id = db.Column(db.Integer, db.ForeignKey('student.id'), nullable=True)
     ranking = db.Column(db.Integer, nullable=True)
+    change = db.Column(db.Integer, nullable=True)
 
     # student = db.relationship('Student', backref=db.backref('students', lazy=True))
 
@@ -185,65 +309,104 @@ class Category(db.Model):
         return '<Category %r>' % self.name
 
 
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
 def login():  # put application's code here
-    return render_template("login.html")
-
-
-@app.route('/settings', methods=['GET', 'POST'])
-def settings():
-    return render_template("/settings.html")
+    if request.method == 'GET':
+        if current_user.is_authenticated:
+            return redirect(url_for('view_posts'))
+        return render_template("login.html")
+    else:
+        email = request.form["email"]
+        user = User.query.filter_by(email=email).first()
+        password = request.form["password"]
+        if user and user.check_password(password=password):  # If the user exists and the password is correct
+            login_user(user)
+            flash("Login successful.")
+            return redirect(url_for("view_posts"))
+        flash("Login not successful.")
+        return redirect(url_for("login"))
 
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == "GET":
-        return render_template("/signup.html")
-    # else:
+        if current_user.is_authenticated:
+            return redirect(url_for('view_posts'))
 
+    else:
+        # Logic for creating a new user, then logging them in
+        email = request.form["email"]
+        existing_user = User.query.filter_by(email=email).first()
+        if existing_user is None:
+            user = User(email=email)
+            user.set_password(request.form["password"])
+            db.session.add(user)
+            db.session.commit()
+            login_user(user)
+            return redirect(url_for("view_posts"))
+        flash("A user with that email already exists.")
+    return render_template("signup.html")
+
+
+@app.route('/settings', methods=['GET', 'POST'])
+@login_required
+def settings():
+    return render_template("/settings.html")
 
 
 @app.route('/database', methods=['GET', 'POST'])
+@login_required
 def view_posts():
     if request.method == "GET":
         # # print("opening database.html")
         # database()
         students = Student.query.all()
-        date = Scrape.query.order_by(Scrape.date).first().date
+        date = Scrape.query.order_by(Scrape.date.desc()).first().date
+        # print("Most recent scrape is from " + str(date))
         scrapes = Scrape.query.filter_by(date=date).all()
         # print(scrapes[0].student.id)
         return render_template("database.html", posts=students, scrapes=scrapes)
 
 
 @app.route('/database/points', methods=['GET', 'POST'])
+@login_required
 def points():
     if request.method == "GET":
         # database()
         students = Student.query.all()
         # points = Scrape.query.order_by(Scrape.points).first().points
-        date = Scrape.query.order_by(Scrape.date).first().date
+        date = Scrape.query.order_by(Scrape.date.desc()).first().date
         scrapes = Scrape.query.order_by(Scrape.points.desc()).filter_by(date=date).all()
 
         return render_template("database.html", posts=students, scrapes=scrapes)
 
 
 @app.route('/database/change', methods=['GET', 'POST'])
+@login_required
 def change():
     if request.method == "GET":
         # database()
         students = Student.query.all()
         # points = Scrape.query.order_by(Scrape.points).first().points
-        date = Scrape.query.order_by(Scrape.date).first().date
+        date = Scrape.query.order_by(Scrape.date.desc()).first().date
         scrapes = Scrape.query.order_by(Scrape.points.desc()).filter_by(date=date).all()
 
         return render_template("database.html", posts=students, scrapes=scrapes)
 
 
+@app.route("/logout")
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for("login"))
+
+
 @app.route('/student/<int:scrape_student_id>', methods=['GET', 'POST'])
+@login_required
 def display_student(scrape_student_id):
     if request.method == "GET":
         fetched_student = Student.query.get(scrape_student_id)
-        scrapes = Scrape.query.filter_by(id=scrape_student_id).all()
+        scrapes = Scrape.query.filter_by(student_id=scrape_student_id).all()
         return render_template("/student.html", student=fetched_student, scrapes=scrapes)
     else:
         fetched_student = Student.query.get(scrape_student_id)
@@ -255,7 +418,7 @@ def display_student(scrape_student_id):
         fetched_student.theClass = request.form["class"]
         db.session.commit()
 
-        scrapes = Scrape.query.filter_by(id=scrape_student_id).all()
+        scrapes = Scrape.query.filter_by(student_id=scrape_student_id).all()
         return render_template("/student.html", student=fetched_student, scrapes=scrapes)
 
 
@@ -264,7 +427,9 @@ def display_student(scrape_student_id):
 
 
 if __name__ == '__main__':
+    # rank_all()
     # db.drop_all()
     db.create_all()
-    app.run(debug=True)
-    # database()
+    database()
+    # change_in_points()
+    app.run(debug=False)
