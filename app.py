@@ -281,6 +281,8 @@ class Student(db.Model):
     theClass = db.Column(db.String(255), default="AP Computer Science A")
     period = db.Column(db.Integer, default=1)
 
+    isArchived = db.Column(db.Boolean, default=False)
+
     scrapes = db.relationship('Scrape', backref='student', lazy=False)
 
     def __repr__(self):
@@ -416,6 +418,7 @@ def display_student(scrape_student_id):
         fetched_student.gradYear = request.form["gradYear"]
         fetched_student.period = request.form["period"]
         fetched_student.theClass = request.form["class"]
+        fetched_student.isArchived = request.form["isArchived"]
         db.session.commit()
 
         scrapes = Scrape.query.filter_by(student_id=scrape_student_id).all()
