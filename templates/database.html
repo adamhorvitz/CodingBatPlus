@@ -17,18 +17,19 @@ CodingBat+ Database
       <th scope="col">Memo</th>
       <th scope="col"><a href="/database" class="card-link">Email</a></b></th>
       <th scope="col"><a href="/database/points" class="card-link">Points</a></b></th>
-      <th scope="col">Date Scraped</th>
+<!--      <th scope="col">Date Scraped</th>-->
       <th scope="col"><a href="/database/change" class="card-link">Change</a></b></th>
     </tr>
   </thead>
   <tbody>
   {% for scrape in scrapes %}
+  {% if scrape.student.isArchived != True %}
     <tr>
       <th scope="row">{{ scrape.ranking }}</th>
       <td><b><a href="/student/{{ scrape.student.id }}" class="card-link">{{scrape.student.memo}}</a></b></td>
       <td><b>{{scrape.student.email}}</b></td>
         <td>{{scrape.points}}</td>
-      <td>{{scrape.date}}</td>
+<!--      <td>{{scrape.date}}</td>-->
         <td>{{scrape.change}}</td>
       <td>
 </td>
@@ -36,6 +37,7 @@ CodingBat+ Database
     <td>
     </td>
     </tr>
+  {% endif %}
 
 
 

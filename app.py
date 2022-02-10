@@ -223,7 +223,6 @@ def database():
 #         dates.add(scrape.date)
 #     print(dates)
 
-
 def change_in_points():
     students = Student.query.all()
     studentChange = 0
@@ -234,12 +233,12 @@ def change_in_points():
         # Order the scrapes for each student from most recent date to last
         for scrape in scrapes:
             studentPoints.append(scrape.points)
-        # print(studentPoints)
-        # Calculate the difference from current scrape and the one before
+            # print(studentPoints)
+            # Calculate the difference from current scrape and the one before
             if len(studentPoints) != 1:
                 for x in range(0, 1):
                     # print(studentPoints[x])
-                    change = studentPoints[x]-studentPoints[x-1]
+                    change = studentPoints[x] - studentPoints[x - 1]
                     # print(change)
                 scrape.change = change
                 db.session.add(scrape)
@@ -247,8 +246,6 @@ def change_in_points():
                 scrape.change = 0
 
     db.session.commit()
-
-
 
 
 def ranking():
@@ -262,7 +259,6 @@ def ranking():
         db.session.add(scrape)
         # print(ranking)
         ranking += 1
-
 
     db.session.commit()
 
@@ -325,7 +321,7 @@ def login():  # put application's code here
             login_user(user)
             flash("Login successful.")
             return redirect(url_for("view_posts"))
-        flash("Login not successful.")
+        flash("Login unsuccessful. Please try again or create a new account.")
         return redirect(url_for("login"))
 
 
@@ -391,7 +387,7 @@ def change():
         students = Student.query.all()
         # points = Scrape.query.order_by(Scrape.points).first().points
         date = Scrape.query.order_by(Scrape.date.desc()).first().date
-        scrapes = Scrape.query.order_by(Scrape.points.desc()).filter_by(date=date).all()
+        scrapes = Scrape.query.order_by(Scrape.change.desc()).filter_by(date=date).all()
 
         return render_template("database.html", posts=students, scrapes=scrapes)
 
@@ -400,33 +396,40 @@ def change():
 @login_required
 def logout():
     logout_user()
+    flash("Logged out.")
     return redirect(url_for("login"))
 
 
 @app.route('/student/<int:scrape_student_id>', methods=['GET', 'POST'])
 @login_required
 def display_student(scrape_student_id):
-    if request.method == "GET":
-        fetched_student = Student.query.get(scrape_student_id)
-        scrapes = Scrape.query.filter_by(student_id=scrape_student_id).all()
-        return render_template("/student.html", student=fetched_student, scrapes=scrapes)
-    else:
-        fetched_student = Student.query.get(scrape_student_id)
+    fetched_student = Student.query.get(scrape_student_id)
+    scrapes = Scrape.query.filter_by(student_id=scrape_student_id).all()
+    return render_template("/student.html", student=fetched_student, scrapes=scrapes)
 
+
+@app.route('/student/<int:student_id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_student(student_id):
+    if request.method == "GET":
+        fetched_student = Student.query.get(student_id)
+        scrapes = Scrape.query.filter_by(student_id=student_id).all()
+        return render_template("/student-edit.html", student=fetched_student, scrapes=scrapes)
+    else:
+        fetched_student = Student.query.get(student_id)
         fetched_student.email = request.form["email"]
         fetched_student.grade = request.form["grade"]
         fetched_student.gradYear = request.form["gradYear"]
         fetched_student.period = request.form["period"]
         fetched_student.theClass = request.form["class"]
-        fetched_student.isArchived = request.form["isArchived"]
+        isBoolean = request.form["isArchived"]
+        if isBoolean == "True" or isBoolean == "False":
+            fetched_student.isArchived = eval(isBoolean)
+        flash("Student info updated.")
         db.session.commit()
 
-        scrapes = Scrape.query.filter_by(student_id=scrape_student_id).all()
+        scrapes = Scrape.query.filter_by(student_id=student_id).all()
         return render_template("/student.html", student=fetched_student, scrapes=scrapes)
-
-
-# # Shut down the scheduler when exiting the app
-# atexit.register(lambda: scheduler.shutdown())
 
 
 if __name__ == '__main__':
@@ -435,4 +438,4 @@ if __name__ == '__main__':
     db.create_all()
     database()
     # change_in_points()
-    app.run(debug=False)
+    app.run(debug=True)

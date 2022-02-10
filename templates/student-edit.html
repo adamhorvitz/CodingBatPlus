@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Student
+{% endblock %}
+
+{% block content %}
+<br>
+
+
+<form method="post">
+         <input type="hidden" id="student_id" name="student_id" value="{{student.id}}">
+        <textarea name="email" id="email" rows="1" cols="30">{{ student.email }}</textarea><br>
+        <textarea name="grade" id="grade" rows="1" cols="30">{{ student.grade }}</textarea><br>
+        <textarea name="gradYear" id="gradYear" rows="1" cols="30">{{ student.gradYear }}</textarea><br>
+        <textarea name="class" id="class" rows="1" cols="30">{{ student.theClass }}</textarea><br>
+        <textarea name="period" id="period" rows="1" cols="30">{{ student.period }}</textarea><br>
+        <textarea name="isArchived" id="isArchived" rows="1" cols="30">{{ student.isArchived }}</textarea><br>
+        <button type="submit" class="btn btn-primary">Save All Changes</button>
+</form>
+
+
+
+<br><br>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th scope="col">Date</th>
+      <th scope="col">Total Points</th>
+      <th scope="col">Change</th>
+      <th scope="col">Ranking</th>
+    </tr>
+  </thead>
+  <tbody>
+{% for scrape in scrapes %}
+    <tr>
+      <th scope="row">{{scrape.date }}</th>
+      <td><b>{{scrape.points}}</b></td>
+      <td><b>{{scrape.change}}</b></td>
+        <td>{{scrape.ranking}}</td>
+      <td>
+</td>
+
+    <td>
+    </td>
+    </tr>
+
+{% endfor %}
+  </tbody>
+</table>
+
+
+
+{% endblock %}
