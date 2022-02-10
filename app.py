@@ -366,6 +366,16 @@ def view_posts():
         return render_template("database.html", posts=students, scrapes=scrapes)
 
 
+@app.route('/database/archive', methods=['GET', 'POST'])
+@login_required
+def view_archived():
+    if request.method == "GET":
+        students = Student.query.all()
+        date = Scrape.query.order_by(Scrape.date.desc()).first().date
+        scrapes = Scrape.query.filter_by(date=date).all()
+        return render_template("archive-database.html", posts=students, scrapes=scrapes)
+
+
 @app.route('/database/points', methods=['GET', 'POST'])
 @login_required
 def points():

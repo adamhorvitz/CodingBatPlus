@@ -6,24 +6,24 @@ CodingBat+ Database
 
 {% block content %}
 <br>
-<h1>CodingBat+ Database for {{scrapes[0].date}}</h1>
+<h1>Archived Database for {{scrapes[0].date}}</h1>
 
 <br>
 
 <table class="table">
   <thead>
     <tr>
-      <th scope="col"><a href="/database/points" class="card-link">Ranking</a></b></th>
+      <th scope="col">Ranking</th>
       <th scope="col">Memo</th>
-      <th scope="col"><a href="/database" class="card-link">Email</a></b></th>
-      <th scope="col"><a href="/database/points" class="card-link">Points</a></b></th>
+      <th scope="col">Email</th>
+      <th scope="col">Points</th>
 <!--      <th scope="col">Date Scraped</th>-->
-      <th scope="col"><a href="/database/change" class="card-link">Change</a></b></th>
+      <th scope="col">Change</th>
     </tr>
   </thead>
   <tbody>
   {% for scrape in scrapes %}
-  {% if scrape.student.isArchived != True %}
+  {% if scrape.student.isArchived == True %}
     <tr>
       <th scope="row">{{ scrape.ranking }}</th>
       <td><b><a href="/student/{{ scrape.student.id }}" class="card-link">{{scrape.student.memo}}</a></b></td>
@@ -45,8 +45,5 @@ CodingBat+ Database
 
   </tbody>
 </table>
-
-
-<b><a href="/database/archive" class="card-link">View Archived Database</a></b><br>
 
 {% endblock %}
