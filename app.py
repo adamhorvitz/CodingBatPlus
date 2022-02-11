@@ -8,8 +8,10 @@ import time
 from datetime import datetime, date
 from flask_apscheduler import APScheduler
 from flask_login import LoginManager, UserMixin, login_required, logout_user, current_user, login_user
+from flask_migrate import Migrate
 
 from werkzeug.security import generate_password_hash, check_password_hash
+
 
 app = Flask(__name__)
 load_dotenv()
@@ -22,6 +24,7 @@ app.secret_key = environ.get('APP_SECRET_KEY')
 login_manager = LoginManager()
 login_manager.init_app(app)
 
+migrate = Migrate(app, db)
 
 class User(UserMixin, db.Model):
     id = db.Column(
@@ -414,7 +417,7 @@ def logout():
 @login_required
 def display_student(scrape_student_id):
     fetched_student = Student.query.get(scrape_student_id)
-    scrapes = Scrape.query.filter_by(student_id=scrape_student_id).all()
+    scrapes = Scrape.query.filter_by(student_id=scrape_student_id).order_by(Scrape.date.desc()).all()
     return render_template("/student.html", student=fetched_student, scrapes=scrapes)
 
 
@@ -423,7 +426,7 @@ def display_student(scrape_student_id):
 def edit_student(student_id):
     if request.method == "GET":
         fetched_student = Student.query.get(student_id)
-        scrapes = Scrape.query.filter_by(student_id=student_id).all()
+        scrapes = Scrape.query.filter_by(student_id=student_id).order_by(Scrape.date.desc()).all()
         return render_template("/student-edit.html", student=fetched_student, scrapes=scrapes)
     else:
         fetched_student = Student.query.get(student_id)
@@ -438,7 +441,7 @@ def edit_student(student_id):
         flash("Student info updated.")
         db.session.commit()
 
-        scrapes = Scrape.query.filter_by(student_id=student_id).all()
+        scrapes = Scrape.query.filter_by(student_id=student_id).order_by(Scrape.date.desc()).all()
         return render_template("/student.html", student=fetched_student, scrapes=scrapes)
 
 

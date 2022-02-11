@@ -5,3 +5,7 @@ Flask-SQLAlchemy~=2.5.1
 python-dotenv==0.19.2
 DateTime==4.3
 Werkzeug==2.0.2
+Flask-APScheduler
+flask-login
+psycopg2-binary
+Flask-Migrate
