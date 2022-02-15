@@ -85,7 +85,6 @@ class User(UserMixin, db.Model):
         default="Carambola3993"
     )
 
-
     def set_password(self, password):
         """Create hashed password."""
         self.password = generate_password_hash(
@@ -131,7 +130,6 @@ except:
     frequency = Frequency()
     db.session.add(frequency)
     db.session.commit()
-
 
 frequency = Frequency.query.first()
 
@@ -483,6 +481,15 @@ def change():
         scrapes = Scrape.query.order_by(Scrape.change.desc()).filter_by(date=date).all()
 
         return render_template("database.html", posts=students, scrapes=scrapes)
+
+
+@app.route('/database/<int:period>', methods=['GET', 'POST'])
+@login_required
+def period(period):
+    if request.method == "GET":
+        date = Scrape.query.order_by(Scrape.date.desc()).first().date
+        scrapes = Scrape.query.order_by(Scrape.change.desc()).filter_by(date=date).all()
+        return render_template("period-database.html", scrapes=scrapes, period=period)
 
 
 @app.route("/logout")

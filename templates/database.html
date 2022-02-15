@@ -19,6 +19,7 @@ CodingBat+ Database
       <th scope="col"><a href="/database/points" class="card-link">Points</a></b></th>
 <!--      <th scope="col">Date Scraped</th>-->
       <th scope="col"><a href="/database/change" class="card-link">Change</a></b></th>
+      <th scope="col">Period</th>
     </tr>
   </thead>
   <tbody>
@@ -31,6 +32,7 @@ CodingBat+ Database
         <td>{{scrape.points}}</td>
 <!--      <td>{{scrape.date}}</td>-->
         <td>{{scrape.change}}</td>
+      <td><b><a href="/database/{{ scrape.student.period }}" class="card-link">{{scrape.student.period}}</a></b></td>
       <td>
 </td>
 

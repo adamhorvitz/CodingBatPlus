@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block title %}
+CodingBat+ Database
+{% endblock %}
+
+{% block content %}
+<br>
+<h1>Period {{period}} Database for {{scrapes[0].date}}</h1>
+<br>
+
+
+<table class="table">
+  <thead>
+    <tr>
+      <th scope="col">Ranking</th>
+      <th scope="col">Memo</th>
+      <th scope="col">Email</th>
+      <th scope="col">Points</th>
+<!--      <th scope="col">Date Scraped</th>-->
+      <th scope="col">Change</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for scrape in scrapes %}
+  {% if scrape.student.period == period %}
+    <tr>
+      <th scope="row">{{ scrape.ranking }}</th>
+      <td><b><a href="/student/{{ scrape.student.id }}" class="card-link">{{scrape.student.memo}}</a></b></td>
+      <td><b>{{scrape.student.email}}</b></td>
+        <td>{{scrape.points}}</td>
+        <td>{{scrape.change}}</td>
+      <td>
+</td>
+
+    <td>
+    </td>
+    </tr>
+  {% endif %}
+
+
+
+{% endfor %}
+
+  </tbody>
+</table>
+<b><a href="/database" class="card-link">Back To Full Database</a></b><br>
+
+{% endblock %}
