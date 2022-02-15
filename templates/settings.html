@@ -7,7 +7,55 @@ Settings
 {% block content %}
 
 <br>
-<h1>CodingBat+ Settings</h1>
+<h1>CodingBat+ Admin Settings</h1><br>
+
+<form method="post">
+
+<div class="card w-50">
+  <div class="card-body">
+    <h5 class="card-title">Frequency</h5>
+    <h6 class="card-subtitle mb-2 text-muted">How often the site scrapes the web.</h6>
+    <h7 class="card-title">Current frequency: Every {{frequency}} day(s).</h7><br>
+    <label for="frequency">Choose a new frequency:</label>
+
+<select name="frequency" id="frequency" name="frequency">
+  <option value="month">Once a month</option>
+  <option value="week">Once a week</option>
+  <option value="day">Every day</option>
+</select>
+<!--    <input type="text" list="frequency" />-->
+<!--<datalist id="frequency">-->
+<!--  <option value="month">30</option>-->
+<!--  <option value="week">7</option>-->
+<!--  <option value="day">1</option>-->
+<!--</datalist>-->
+  </div>
+</div>
+<br>
+
+<div class="card w-50">
+  <div class="card-body">
+    <h5 class="card-title">Login</h5>
+    <h6 class="card-subtitle mb-2 text-muted">CodingBat Username and Password</h6>
+<!--    <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>-->
+
+  <div class="form-group">
+    <label for="username">Username</label>
+    <input type="text" class="form-control" id="username" name="username" placeholder= {{ username }}>
+  </div>
+  <div class="form-group">
+    <label for="password">Password</label>
+    <input type="text" class="form-control" id="password" name="password" placeholder= {{ password }}>
+  </div>
+
+
+  </div>
+</div>
+<br>
+
+<button type="submit" class="btn btn-primary">Save All Changes</button>
+</form>
+
 
 
 {% endblock %}

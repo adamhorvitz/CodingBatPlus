@@ -12,12 +12,12 @@ from flask_migrate import Migrate
 
 from werkzeug.security import generate_password_hash, check_password_hash
 
-
 app = Flask(__name__)
 load_dotenv()
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 app.config['SQLALCHEMY_DATABASE_URI'] = environ.get('SQLALCHEMY_DATABASE_URI')
+# app.config['SQLALCHEMY_DATABASE_URI'] = environ.get('DATABASE_URL')
 db = SQLAlchemy(app)
 app.secret_key = environ.get('APP_SECRET_KEY')
 
@@ -25,6 +25,30 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 
 migrate = Migrate(app, db)
+
+
+@app.before_first_request
+def before_first_request():
+    try:
+        Frequency.query.all()
+    except:
+        db.create_all()
+        frequency = Frequency()
+        db.session.add(frequency)
+        db.session.commit()
+
+    try:
+        User.query.all()
+    except:
+        db.create_all()
+
+
+class Frequency(db.Model):
+    frequency = db.Column(db.Integer, default=1, primary_key=True)
+
+    def __repr__(self):
+        return str(self.frequency)
+
 
 class User(UserMixin, db.Model):
     id = db.Column(
@@ -47,25 +71,20 @@ class User(UserMixin, db.Model):
         unique=False,
         nullable=False
     )
+    codingbat_email = db.Column(
+        db.String(40),
+        unique=False,
+        nullable=True,
+        default="andre.chmielewski@nbps.org"
+    )
+    codingbat_password = db.Column(
+        db.String(200),
+        unique=False,
+        primary_key=False,
+        nullable=True,
+        default="Carambola3993"
+    )
 
-    # website = db.Column(
-    #     db.String(60),
-    #     index=False,
-    #     unique=False,
-    #     nullable=True
-    # )
-    # created_on = db.Column(
-    #     db.DateTime,
-    #     index=False,
-    #     unique=False,
-    #     nullable=True
-    # )
-    # last_login = db.Column(
-    #     db.DateTime,
-    #     index=False,
-    #     unique=False,
-    #     nullable=True
-    # )
 
     def set_password(self, password):
         """Create hashed password."""
@@ -105,15 +124,24 @@ scheduler = APScheduler()
 scheduler.init_app(app)
 scheduler.start()
 
+try:
+    Frequency.query.all()
+except:
+    db.create_all()
+    frequency = Frequency()
+    db.session.add(frequency)
+    db.session.commit()
 
-@scheduler.task('interval', id='database', days=1, misfire_grace_time=900)
+
+frequency = Frequency.query.first()
+
+
+@scheduler.task('interval', id='database', days=frequency.frequency, misfire_grace_time=900)
 def database():
-    # db.drop_all()
-    # db.create_all()
+    user = User.query.order_by(User.id.desc()).first()
+    username = user.codingbat_email
+    password = user.codingbat_password
 
-    # todayDate = Scrape.query.order_by(Scrape.date).first().date
-    # print(date)
-    # if todayDate != date.today() or todayDate is None:
     home_page = None
     with Session() as s:
         header = {
@@ -123,7 +151,7 @@ def database():
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
             "Content-Type": "application/x-www-form-urlencoded"
         }
-        login_data = {"uname": environ.get('UNAME'), "pw": environ.get('PASSWORD'), "dologin": "log in",
+        login_data = {"uname": username, "pw": password, "dologin": "log in",
                       "fromurl": "/java"}
         s.post("https://codingbat.com/login", data=login_data, headers=header)
         home_page = s.get("https://codingbat.com/report")
@@ -204,14 +232,14 @@ def database():
         # pprint(emailList)
 
 
-# def date_deleter():
-#     date = Scrape.query.order_by(Scrape.date.desc()).first().date
-#     scrapes = Scrape.query.filter_by(date=date).all()
-#
-#     for scrape in scrapes:
-#         db.session.delete(scrape)
-#
-#     db.session.commit()
+def date_deleter():
+    date = Scrape.query.order_by(Scrape.date.desc()).first().date
+    scrapes = Scrape.query.filter_by(date=date).all()
+
+    for scrape in scrapes:
+        db.session.delete(scrape)
+
+    db.session.commit()
 
 
 # def rank_all():
@@ -344,6 +372,7 @@ def signup():
             db.session.add(user)
             db.session.commit()
             login_user(user)
+            database()
             return redirect(url_for("view_posts"))
         flash("A user with that email already exists.")
     return render_template("signup.html")
@@ -352,7 +381,52 @@ def signup():
 @app.route('/settings', methods=['GET', 'POST'])
 @login_required
 def settings():
-    return render_template("/settings.html")
+    if request.method == "GET":
+        frequency = Frequency.query.first().frequency
+        user = User.query.filter_by(id=current_user.id).first()
+        username = user.codingbat_email
+        password = user.codingbat_password
+        return render_template("/settings.html", username=username, password=password, frequency=frequency)
+    else:
+        fetched_frequency = request.form["frequency"]
+        fetched_username = request.form["username"]
+        fetched_password = request.form["password"]
+
+        user = User.query.filter_by(id=current_user.id).first()
+        frequency = Frequency.query.first()
+
+        if fetched_frequency == "month":
+            frequency.frequency = 30
+        elif fetched_frequency == "week":
+            frequency.frequency = 7
+        else:
+            frequency.frequency = 1
+        flash("Frequency updated to every " + str(frequency.frequency) + " day(s)")
+
+        scheduler.add_job(
+            func=database,
+            trigger="interval",
+            days=frequency.frequency,
+            id="database",
+            name="database",
+            replace_existing=True,
+        )
+        # job = scheduler.get_job("database")
+        # flash(job.trigger)
+        # scheduler.reschedule_job('database', trigger='cron', days=frequency.frequency)
+
+        if fetched_username == "" or fetched_password == "":
+            flash("Username/password values not changed")
+        else:
+            flash("Username/password values changed")
+            user.codingbat_email = fetched_username
+            user.codingbat_password = fetched_password
+
+        username = user.codingbat_email
+        password = user.codingbat_password
+        db.session.commit()
+
+        return render_template("/settings.html", username=username, password=password, frequency=frequency)
 
 
 @app.route('/database', methods=['GET', 'POST'])
@@ -361,8 +435,14 @@ def view_posts():
     if request.method == "GET":
         # # print("opening database.html")
         # database()
-        students = Student.query.all()
-        date = Scrape.query.order_by(Scrape.date.desc()).first().date
+        try:
+            students = Student.query.all()
+            date = Scrape.query.order_by(Scrape.date.desc()).first().date
+        except:
+            database()
+            print('Running exception')
+            students = Student.query.all()
+            date = Scrape.query.order_by(Scrape.date.desc()).first().date
         # print("Most recent scrape is from " + str(date))
         scrapes = Scrape.query.filter_by(date=date).all()
         # print(scrapes[0].student.id)
@@ -449,6 +529,7 @@ if __name__ == '__main__':
     # rank_all()
     # db.drop_all()
     db.create_all()
-    database()
+    # date_deleter()
+    # database()
     # change_in_points()
     app.run(debug=True)
