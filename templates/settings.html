@@ -11,7 +11,9 @@ Settings
 
 <form method="post">
 
-<div class="card w-50">
+  <div class="card-group">
+
+<div class="card">
   <div class="card-body">
     <h5 class="card-title">Frequency</h5>
     <h6 class="card-subtitle mb-2 text-muted">How often the site scrapes the web.</h6>
@@ -22,18 +24,14 @@ Settings
   <option value="month">Once a month</option>
   <option value="week">Once a week</option>
   <option value="day">Every day</option>
-</select>
-<!--    <input type="text" list="frequency" />-->
-<!--<datalist id="frequency">-->
-<!--  <option value="month">30</option>-->
-<!--  <option value="week">7</option>-->
-<!--  <option value="day">1</option>-->
-<!--</datalist>-->
+</select><br>
+    <button type="submit" class="btn btn-success" formaction="/settings/database">Scrape Now</button>
   </div>
+  <button type="submit" class="btn btn-primary">Update Frequency</button>
 </div>
 <br>
 
-<div class="card w-50">
+<div class="card">
   <div class="card-body">
     <h5 class="card-title">Login</h5>
     <h6 class="card-subtitle mb-2 text-muted">CodingBat Username and Password</h6>
@@ -47,13 +45,36 @@ Settings
     <label for="password">Password</label>
     <input type="text" class="form-control" id="password" name="password" placeholder= {{ password }}>
   </div>
+  </div>
+  <button type="submit" class="btn btn-primary" formaction="/settings/login">Update Login Info</button>
+</div>
+  <br>
+  <div class="card">
+  <div class="card-body">
+    <h5 class="card-title">Email</h5>
+    <h6 class="card-subtitle mb-2 text-muted">Weekly top 5 scrape emails.</h6>
+    <div class="form-group">
+    <label for="emailSender">Sender</label>
+    <input type="text" class="form-control" id="emailSender" name="emailSender" placeholder= {{ user.emailSender }}>
+  </div>
+  <div class="form-group">
+    <label for="emailTitle">Title</label>
+    <input type="text" class="form-control" id="emailTitle" name="emailTitle" placeholder= {{ user.emailTitle }}>
+  </div><div class="form-group">
+    <label for="emailRecipients">Recipients</label>
+    <input type="text" class="form-control" id="emailRecipients" name="emailRecipients" placeholder= {{ user.emailRecipients }}>
+  </div>
+    <button type="submit" class="btn btn-success" formaction="/settings/email">Manually Send Email</button>
+    </div>
+
+    <button type="submit" class="btn btn-primary" formaction="/settings/emailUpdate">Update Email Info</button>
 
 
   </div>
 </div>
 <br>
+</div>
 
-<button type="submit" class="btn btn-primary">Save All Changes</button>
 </form>
 
 

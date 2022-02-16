@@ -4,11 +4,11 @@ from bs4 import BeautifulSoup
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from requests import Session
-import time
 from datetime import datetime, date
 from flask_apscheduler import APScheduler
 from flask_login import LoginManager, UserMixin, login_required, logout_user, current_user, login_user
 from flask_migrate import Migrate
+from flask_mail import Mail, Message
 
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -18,6 +18,14 @@ load_dotenv()
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 app.config['SQLALCHEMY_DATABASE_URI'] = environ.get('SQLALCHEMY_DATABASE_URI')
 # app.config['SQLALCHEMY_DATABASE_URI'] = environ.get('DATABASE_URL')
+
+app.config['MAIL_SERVER'] = ENV[‘AUTH_TOKEN’]
+app.config['MAIL_PORT'] = 465
+app.config['MAIL_USERNAME'] = ENV[‘AUTH_TOKEN’]
+app.config['MAIL_PASSWORD'] = 'ENV[‘AUTH_TOKEN’]
+app.config['MAIL_USE_TLS'] = False
+app.config['MAIL_USE_SSL'] = True
+
 db = SQLAlchemy(app)
 app.secret_key = environ.get('APP_SECRET_KEY')
 
@@ -25,7 +33,7 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 
 migrate = Migrate(app, db)
-
+mail = Mail(app)
 
 @app.before_first_request
 def before_first_request():
@@ -41,6 +49,31 @@ def before_first_request():
         User.query.all()
     except:
         db.create_all()
+
+
+def message():
+    with app.app_context():
+        user = User.query.filter_by(id=current_user.id).first()
+
+
+
+        date = Scrape.query.order_by(Scrape.date.desc()).first().date
+        scrapes = Scrape.query.order_by(Scrape.points.desc()).filter_by(date=date).limit(5).all()
+        msg = Message(user.emailTitle, sender=user.emailSender, recipients=[user.emailRecipients])
+        body = "Hey, here's the top 5 scrapes as of " + str(date.today()) + "!\n\n"
+        for scrape in scrapes:
+            body += str(scrape.student.memo) + " is #" + str(scrape.ranking) + " with " + str(scrape.points) + " points\n"
+
+        scrapes = Scrape.query.order_by(Scrape.change.desc()).filter_by(date=date).limit(5).all()
+        body += "\nAnd here are the top 5 most improved!\n\n"
+        for scrape in scrapes:
+            body += str(scrape.student.memo) + " has changed by " + str(scrape.change) + " points\n"
+
+        body += "\nAdam Horvitz\nNorth Broward Preparatory School"
+        print(body)
+        msg.body = body
+        mail.send(msg)
+        return "Message sent!"
 
 
 class Frequency(db.Model):
@@ -84,6 +117,10 @@ class User(UserMixin, db.Model):
         nullable=True,
         default="Carambola3993"
     )
+
+    emailSender = db.Column(db.String(40), unique=False, nullable=True, default="horvitzadamh@gmail.com")
+    emailTitle = db.Column(db.String(40), unique=False, nullable=True, default="CodingBat+ Scrape Data")
+    emailRecipients = db.Column(db.String(200), unique=False, nullable=True, default="adam.horvitz@mynbps.org")
 
     def set_password(self, password):
         """Create hashed password."""
@@ -230,28 +267,6 @@ def database():
         # pprint(emailList)
 
 
-def date_deleter():
-    date = Scrape.query.order_by(Scrape.date.desc()).first().date
-    scrapes = Scrape.query.filter_by(date=date).all()
-
-    for scrape in scrapes:
-        db.session.delete(scrape)
-
-    db.session.commit()
-
-
-# def rank_all():
-#     # date_deleter()  # Delete the most recent date (debug)
-#
-#     # Get all scrapes in the database
-#     scrapes = Scrape.query.all()
-#
-#     # Go through each scrape and extract ALL the dates
-#     dates = set()
-#     for scrape in scrapes:
-#         dates.add(scrape.date)
-#     print(dates)
-
 def change_in_points():
     students = Student.query.all()
     studentChange = 0
@@ -291,9 +306,27 @@ def ranking():
 
     db.session.commit()
 
+# def date_deleter():
+#     date = Scrape.query.order_by(Scrape.date.desc()).first().date
+#     scrapes = Scrape.query.filter_by(date=date).all()
+#
+#     for scrape in scrapes:
+#         db.session.delete(scrape)
+#
+#     db.session.commit()
 
-def print_date_time():
-    print(time.strftime("%A, %d. %B %Y %I:%M:%S %p"))
+
+# def rank_all():
+#     # date_deleter()  # Delete the most recent date (debug)
+#
+#     # Get all scrapes in the database
+#     scrapes = Scrape.query.all()
+#
+#     # Go through each scrape and extract ALL the dates
+#     dates = set()
+#     for scrape in scrapes:
+#         dates.add(scrape.date)
+#     print(dates)
 
 
 class Student(db.Model):
@@ -384,11 +417,9 @@ def settings():
         user = User.query.filter_by(id=current_user.id).first()
         username = user.codingbat_email
         password = user.codingbat_password
-        return render_template("/settings.html", username=username, password=password, frequency=frequency)
+        return render_template("/settings.html", username=username, password=password, frequency=frequency, user=user)
     else:
         fetched_frequency = request.form["frequency"]
-        fetched_username = request.form["username"]
-        fetched_password = request.form["password"]
 
         user = User.query.filter_by(id=current_user.id).first()
         frequency = Frequency.query.first()
@@ -409,9 +440,23 @@ def settings():
             name="database",
             replace_existing=True,
         )
-        # job = scheduler.get_job("database")
-        # flash(job.trigger)
-        # scheduler.reschedule_job('database', trigger='cron', days=frequency.frequency)
+        db.session.commit()
+
+        username = user.codingbat_email
+        password = user.codingbat_password
+
+        return render_template("/settings.html", username=username, password=password, frequency=frequency, user=user)
+
+
+@app.route('/settings/login', methods=['GET', 'POST'])
+@login_required
+def settings_login():
+    if request.method == "GET":
+       return redirect(url_for("settings"))
+    else:
+        fetched_username = request.form["username"]
+        fetched_password = request.form["password"]
+        user = User.query.filter_by(id=current_user.id).first()
 
         if fetched_username == "" or fetched_password == "":
             flash("Username/password values not changed")
@@ -423,8 +468,55 @@ def settings():
         username = user.codingbat_email
         password = user.codingbat_password
         db.session.commit()
+        frequency = Frequency.query.first().frequency
 
-        return render_template("/settings.html", username=username, password=password, frequency=frequency)
+        return render_template("/settings.html", username=username, password=password, frequency=frequency, user=user)
+
+
+@app.route('/settings/email', methods=['GET', 'POST'])
+@login_required
+def settings_email():
+    if request.method == "GET":
+        return redirect(url_for("settings"))
+    else:
+        message()
+        flash("Email successfully sent to adam.horvitz@mynbps.org")
+        user = User.query.filter_by(id=current_user.id).first()
+        username = user.codingbat_email
+        password = user.codingbat_password
+        frequency = Frequency.query.first().frequency
+
+        return render_template("/settings.html", username=username, password=password, frequency=frequency, user=user)
+
+
+@app.route('/settings/emailUpdate', methods=['GET', 'POST'])
+@login_required
+def settings_email_update():
+    if request.method == "GET":
+        return redirect(url_for("settings"))
+    else:
+        user = User.query.filter_by(id=current_user.id).first()
+        if request.form["emailSender"] != "":
+            user.emailSender = request.form["emailSender"]
+        if request.form["emailTitle"] != "":
+            user.emailTitle = request.form["emailTitle"]
+        if request.form["emailRecipients"] != "":
+            user.emailRecipients = request.form["emailRecipients"]
+        db.session.commit()
+        flash("Email info updated.")
+
+        return redirect(url_for("settings"))
+
+@app.route('/settings/database', methods=['GET', 'POST'])
+@login_required
+def settings_database():
+    if request.method == "GET":
+        return redirect(url_for("settings"))
+    else:
+        database()
+        flash("Database updated for the day.")
+
+        return redirect(url_for("settings"))
 
 
 @app.route('/database', methods=['GET', 'POST'])
@@ -474,9 +566,7 @@ def points():
 @login_required
 def change():
     if request.method == "GET":
-        # database()
         students = Student.query.all()
-        # points = Scrape.query.order_by(Scrape.points).first().points
         date = Scrape.query.order_by(Scrape.date.desc()).first().date
         scrapes = Scrape.query.order_by(Scrape.change.desc()).filter_by(date=date).all()
 
@@ -533,10 +623,9 @@ def edit_student(student_id):
 
 
 if __name__ == '__main__':
-    # rank_all()
     # db.drop_all()
     db.create_all()
-    # date_deleter()
     # database()
     # change_in_points()
+    # message()
     app.run(debug=True)

@@ -9,3 +9,4 @@ Flask-APScheduler
 flask-login
 psycopg2-binary
 Flask-Migrate
+Flask-Mail

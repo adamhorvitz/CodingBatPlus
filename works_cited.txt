@@ -1,2 +1,3 @@
 https://hackersandslackers.com/flask-login-user-authentication/
 https://flask-login.readthedocs.io/en/latest/#how-it-works
+https://mailtrap.io/blog/flask-email-sending/#Sending-emails-in-Flask
