@@ -628,9 +628,5 @@ def edit_student(student_id):
 
 
 if __name__ == '__main__':
-    # db.drop_all()
     db.create_all()
-    # database()
-    # change_in_points()
-    # message()
     app.run(debug=True)
