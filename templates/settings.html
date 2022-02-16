@@ -39,11 +39,11 @@ Settings
 
   <div class="form-group">
     <label for="username">Username</label>
-    <input type="text" class="form-control" id="username" name="username" placeholder= {{ username }}>
+    <input type="text" class="form-control" id="username" name="username" value= {{ username }}>
   </div>
   <div class="form-group">
     <label for="password">Password</label>
-    <input type="text" class="form-control" id="password" name="password" placeholder= {{ password }}>
+    <input type="text" class="form-control" id="password" name="password" value= {{ password }}>
   </div>
   </div>
   <button type="submit" class="btn btn-primary" formaction="/settings/login">Update Login Info</button>
@@ -55,14 +55,14 @@ Settings
     <h6 class="card-subtitle mb-2 text-muted">Weekly top 5 scrape emails.</h6>
     <div class="form-group">
     <label for="emailSender">Sender</label>
-    <input type="text" class="form-control" id="emailSender" name="emailSender" placeholder= {{ user.emailSender }}>
+    <input type="text" class="form-control" id="emailSender" name="emailSender" value= {{ user.emailSender }}>
   </div>
   <div class="form-group">
     <label for="emailTitle">Title</label>
-    <input type="text" class="form-control" id="emailTitle" name="emailTitle" placeholder= {{ user.emailTitle }}>
+    <input type="text" class="form-control" id="emailTitle" name="emailTitle" value= {{ user.emailTitle }}>
   </div><div class="form-group">
     <label for="emailRecipients">Recipients</label>
-    <input type="text" class="form-control" id="emailRecipients" name="emailRecipients" placeholder= {{ user.emailRecipients }}>
+    <input type="text" class="form-control" id="emailRecipients" name="emailRecipients" value= {{ user.emailRecipients }}>
   </div>
     <button type="submit" class="btn btn-success" formaction="/settings/email">Manually Send Email</button>
     </div>

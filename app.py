@@ -479,14 +479,18 @@ def settings_email():
     if request.method == "GET":
         return redirect(url_for("settings"))
     else:
-        message()
-        flash("Email successfully sent to adam.horvitz@mynbps.org")
         user = User.query.filter_by(id=current_user.id).first()
-        username = user.codingbat_email
-        password = user.codingbat_password
-        frequency = Frequency.query.first().frequency
+        if request.form["emailSender"] != "":
+            user.emailSender = request.form["emailSender"]
+        if request.form["emailTitle"] != "":
+            user.emailTitle = request.form["emailTitle"]
+        if request.form["emailRecipients"] != "":
+            user.emailRecipients = request.form["emailRecipients"]
+        db.session.commit()
+        message()
+        flash("Email successfully sent to " + request.form["emailRecipients"])
 
-        return render_template("/settings.html", username=username, password=password, frequency=frequency, user=user)
+        return redirect(url_for("settings"))
 
 
 @app.route('/settings/emailUpdate', methods=['GET', 'POST'])
@@ -506,6 +510,7 @@ def settings_email_update():
         flash("Email info updated.")
 
         return redirect(url_for("settings"))
+
 
 @app.route('/settings/database', methods=['GET', 'POST'])
 @login_required
