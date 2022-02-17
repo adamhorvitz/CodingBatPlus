@@ -9,14 +9,47 @@ Student
 
 
 <form method="post">
-         <input type="hidden" id="student_id" name="student_id" value="{{student.id}}">
-        <textarea name="email" id="email" rows="1" cols="30">{{ student.email }}</textarea><br>
-        <textarea name="grade" id="grade" rows="1" cols="30">{{ student.grade }}</textarea><br>
-        <textarea name="gradYear" id="gradYear" rows="1" cols="30">{{ student.gradYear }}</textarea><br>
-        <textarea name="class" id="class" rows="1" cols="30">{{ student.theClass }}</textarea><br>
-        <textarea name="period" id="period" rows="1" cols="30">{{ student.period }}</textarea><br>
-        <textarea name="isArchived" id="isArchived" rows="1" cols="30">{{ student.isArchived }}</textarea><br>
+        <label for="email" class="col-sm-2 col-form-label">Email</label>
+    <div class="col-sm-10">
+        <input type="text" class="form-control" id="email" name="email" value= {{ student.email }}>
+    </div>
+    <label for="grade" class="col-sm-2 col-form-label">Grade</label>
+    <div class="col-sm-10">
+        <input type="text" class="form-control" id="grade" name="grade" value= {{ student.grade }}>
+    </div>
+    <label for="gradYear" class="col-sm-2 col-form-label">Graduation Year</label>
+    <div class="col-sm-10">
+        <input type="text" class="form-control" id="gradYear" name="gradYear" value= {{ student.gradYear }}>
+    </div>
+    <label for="class" class="col-sm-2 col-form-label">Class</label>
+    <div class="col-sm-10">
+        <input type="text" class="form-control" id="class" name="class" value= {{ student.theClass }}>
+    </div>
+    <label for="period" class="col-sm-2 col-form-label">Period</label>
+    <div class="col-sm-10">
+        <input type="text" class="form-control" id="period" name="period" value= {{ student.period }}>
+    </div>
+    <label for="memo" class="col-sm-2 col-form-label">Memo</label>
+    <div class="col-sm-10">
+        <input type="text" class="form-control" id="memo" name="memo" value= {{ student.memo }}>
+    </div><br>
+    <div class="col-sm-10">
+
+
+<div class="form-check form-check-inline">
+  <input class="form-check-input" type="radio" name="isArchived" id="isActive" value="isActive">
+  <label class="form-check-label" for="isActive">Active</label>
+</div>
+
+<div class="form-check form-check-inline">
+  <input class="form-check-input" type="radio" name="isArchived" id="isArchived" value="isArchived">
+  <label class="form-check-label" for="isArchived">Archived</label>
+</div>
+
+        <br><br>
         <button type="submit" class="btn btn-primary">Save All Changes</button>
+        </div>
+
 </form>
 
 

@@ -5,17 +5,17 @@ Student
 {% endblock %}
 
 {% block content %}
-<br>
 
 
 
-<b>ID:</b> <span> {{student.id}} </span><br>
+<!--<b>ID:</b> <span> {{student.id}} </span><br>-->
 <b>Email:</b> <span> {{student.email}} </span><br>
 <b>Grade:</b> <span> {{student.grade}} </span><br>
 <b>Graduation Year:</b> <span> {{student.gradYear}} </span><br>
 <b>Class:</b> <span> {{student.theClass}} </span><br>
 <b>Period:</b> <span> {{student.period}} </span><br>
-<b>Is Archived:</b> <span> {{student.isArchived}} </span><br><br>
+<b>Is Archived:</b> <span> {{student.isArchived}} </span><br>
+<b>Memo:</b> <span> {{student.memo}} </span><br><br>
 
 <b><a href="/student/{{ student.id }}/edit" class="card-link">Edit Student Information</a></b>
 

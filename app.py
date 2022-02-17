@@ -9,6 +9,7 @@ from flask_apscheduler import APScheduler
 from flask_login import LoginManager, UserMixin, login_required, logout_user, current_user, login_user
 from flask_migrate import Migrate
 from flask_mail import Mail, Message
+import json
 
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -51,28 +52,53 @@ def before_first_request():
         db.create_all()
 
 
-def message():
+def send_student_email_reports():
+    students = Student.query.filter_by(isArchived=False).all()
+    # user = User.query.filter_by(id=current_user.id).first()
+    date = Scrape.query.order_by(Scrape.date.desc()).first().date
+    for student in students:
+        scrape = Scrape.query.filter_by(student_id=student.id).filter_by(date=date).first()
+        # msg = Message("Your Weekly CodingBat Progress", sender=user.replyToEmail, recipients=[student.email])
+        body = "Hey " + student.memo + ", Here's how you're doing this week on CodingBat!\n\n"
+        body += "You have " + str(scrape.points) + " points.\n"
+        body += "Since last week, you've changed by " + str(scrape.change) +" points.\n"
+        body += "Your ranking is #"+str(scrape.ranking)+".\n"
+        print(body)
+        # msg.body = body
+        # mail.send(msg)
+
+    return "Messages sent!"
+
+
+def send_teacher_email_reports():
     with app.app_context():
         user = User.query.filter_by(id=current_user.id).first()
 
-
-
         date = Scrape.query.order_by(Scrape.date.desc()).first().date
         scrapes = Scrape.query.order_by(Scrape.points.desc()).filter_by(date=date).limit(5).all()
-        msg = Message(user.emailTitle, sender=user.emailSender, recipients=[user.emailRecipients])
+        msg = Message("CodingBat+ Scrape Info", sender=user.replyToEmail, recipients=["adam.horvitz@mynbps.org"])
         body = "Hey, here's the top 5 scrapes as of " + str(date.today()) + "!\n\n"
         for scrape in scrapes:
             body += str(scrape.student.memo) + " is #" + str(scrape.ranking) + " with " + str(scrape.points) + " points\n"
 
         scrapes = Scrape.query.order_by(Scrape.change.desc()).filter_by(date=date).limit(5).all()
-        body += "\nAnd here are the top 5 most improved!\n\n"
+        # If none of these are improved then don't include this part at all
+        improved = ""
+        counter = 0
         for scrape in scrapes:
-            body += str(scrape.student.memo) + " has changed by " + str(scrape.change) + " points\n"
+            if scrape.change > 0:
+                improved += str(scrape.student.memo) + " has changed by " + str(scrape.change) + " points\n"
+                counter += 1
+        if counter != 0:
+            body += "\nAnd here are the most improved!\n\n"
+            body += improved
 
         body += "\nAdam Horvitz\nNorth Broward Preparatory School"
-        print(body)
+        # print(body)
+        # jsonMsg = json.dumps(body)
+        # # print(jsonMsg)
         msg.body = body
-        mail.send(msg)
+        # mail.send(msg)
         return "Message sent!"
 
 
@@ -88,11 +114,6 @@ class User(UserMixin, db.Model):
         db.Integer,
         primary_key=True
     )
-    # name = db.Column(
-    #     db.String(100),
-    #     nullable=False,
-    #     unique=False
-    # )
     email = db.Column(
         db.String(40),
         unique=True,
@@ -118,9 +139,8 @@ class User(UserMixin, db.Model):
         default="Carambola3993"
     )
 
-    emailSender = db.Column(db.String(40), unique=False, nullable=True, default="horvitzadamh@gmail.com")
-    emailTitle = db.Column(db.String(40), unique=False, nullable=True, default="CodingBat+ Scrape Data")
-    emailRecipients = db.Column(db.String(200), unique=False, nullable=True, default="adam.horvitz@mynbps.org")
+    replyToEmail = db.Column(db.String(500), unique=False, nullable=True)
+    signature = db.Column(db.String(500), unique=False, nullable=True, default="CodingBat+ Scrape Data")
 
     def set_password(self, password):
         """Create hashed password."""
@@ -396,14 +416,20 @@ def signup():
     else:
         # Logic for creating a new user, then logging them in
         email = request.form["email"]
+        secretKey = request.form["secretKey"]
+        if secretKey != "NBPS2022":
+            flash("Secret key incorrect.")
+            return render_template("signup.html")
         existing_user = User.query.filter_by(email=email).first()
         if existing_user is None:
             user = User(email=email)
             user.set_password(request.form["password"])
+            user.replyToEmail = email
             db.session.add(user)
             db.session.commit()
             login_user(user)
             database()
+            flash("User created!")
             return redirect(url_for("view_posts"))
         flash("A user with that email already exists.")
     return render_template("signup.html")
@@ -417,6 +443,7 @@ def settings():
         user = User.query.filter_by(id=current_user.id).first()
         username = user.codingbat_email
         password = user.codingbat_password
+        print(user.signature)
         return render_template("/settings.html", username=username, password=password, frequency=frequency, user=user)
     else:
         fetched_frequency = request.form["frequency"]
@@ -481,14 +508,12 @@ def settings_email():
     else:
         user = User.query.filter_by(id=current_user.id).first()
         if request.form["emailSender"] != "":
-            user.emailSender = request.form["emailSender"]
+            user.replyToEmail = request.form["emailSender"]
         if request.form["emailTitle"] != "":
-            user.emailTitle = request.form["emailTitle"]
-        if request.form["emailRecipients"] != "":
-            user.emailRecipients = request.form["emailRecipients"]
+            user.signature = request.form["emailTitle"]
         db.session.commit()
-        message()
-        flash("Email successfully sent to " + request.form["emailRecipients"])
+        send_teacher_email_reports()
+        flash("Email successfully sent!")
 
         return redirect(url_for("settings"))
 
@@ -501,11 +526,9 @@ def settings_email_update():
     else:
         user = User.query.filter_by(id=current_user.id).first()
         if request.form["emailSender"] != "":
-            user.emailSender = request.form["emailSender"]
+            user.replyToEmail = request.form["emailSender"]
         if request.form["emailTitle"] != "":
-            user.emailTitle = request.form["emailTitle"]
-        if request.form["emailRecipients"] != "":
-            user.emailRecipients = request.form["emailRecipients"]
+            user.signature = request.form["emailTitle"]
         db.session.commit()
         flash("Email info updated.")
 
@@ -617,9 +640,10 @@ def edit_student(student_id):
         fetched_student.gradYear = request.form["gradYear"]
         fetched_student.period = request.form["period"]
         fetched_student.theClass = request.form["class"]
-        isBoolean = request.form["isArchived"]
-        if isBoolean == "True" or isBoolean == "False":
-            fetched_student.isArchived = eval(isBoolean)
+        if request.form.get('isArchived') == "isArchived":
+            fetched_student.isArchived = True
+        else:
+            fetched_student.isArchived = False
         flash("Student info updated.")
         db.session.commit()
 
@@ -629,4 +653,5 @@ def edit_student(student_id):
 
 if __name__ == '__main__':
     db.create_all()
+    send_student_email_reports()
     app.run(debug=True)

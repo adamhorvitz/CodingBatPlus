@@ -8,11 +8,15 @@ Sign Up
 <form class="form-signup" method="post">
   <img class="mb-4" src="/docs/4.6/assets/brand/bootstrap-solid.svg" alt="" width="72" height="72">
   <h1 class="h3 mb-3 font-weight-normal">Please sign up</h1>
+
   <label for="email" class="sr-only">Email address</label>
   <input name="email" type="email" id="email" class="form-control" placeholder="Email address" required autofocus>
+
   <label for="password" class="sr-only">Password</label>
   <input name="password" type="password" id="password" class="form-control" placeholder="Password" required>
-  <input type="password" id="inputPasswordAgain" class="form-control" placeholder="Confirm Password" required>
+
+  <label for="secretKey" class="sr-only">Secret Key</label>
+  <input name="secretKey" type="secretKey" id="secretKey" class="form-control" placeholder="Secret Key" required>
   <br>
   <button class="btn btn-lg btn-primary btn-block" type="submit">Sign Up</button>
 </form>
