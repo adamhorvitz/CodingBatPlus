@@ -1,17 +1,17 @@
-from dotenv import load_dotenv
+from datetime import date
 from os import environ
+import numpy as np
+import matplotlib.pyplot as plt
+import mpld3
 from bs4 import BeautifulSoup
+from dotenv import load_dotenv
 from flask import Flask, render_template, request, redirect, url_for, flash
-from flask_sqlalchemy import SQLAlchemy
-from requests import Session
-from datetime import datetime, date
 from flask_apscheduler import APScheduler
 from flask_login import LoginManager, UserMixin, login_required, logout_user, current_user, login_user
-from flask_migrate import Migrate
 from flask_mail import Mail, Message
-import json
-from pprint import pprint
-
+from flask_migrate import Migrate
+from flask_sqlalchemy import SQLAlchemy
+from requests import Session
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
@@ -294,7 +294,6 @@ def change_in_points():
 
 @app.route('/json', methods=['GET', 'POST'])
 @login_required
-
 def json_creator():
     date = Scrape.query.order_by(Scrape.date.desc()).first().date
     students = Student.query.all()
@@ -625,6 +624,15 @@ def period(period):
         return render_template("period-database.html", scrapes=scrapes, period=period)
 
 
+@app.route('/database/view/<string:theClass>', methods=['GET', 'POST'])
+@login_required
+def theClass(theClass):
+    if request.method == "GET":
+        date = Scrape.query.order_by(Scrape.date.desc()).first().date
+        scrapes = Scrape.query.order_by(Scrape.change.desc()).filter_by(date=date).all()
+        return render_template("class-database.html", scrapes=scrapes, theClass=theClass)
+
+
 @app.route("/logout")
 @login_required
 def logout():
@@ -638,7 +646,15 @@ def logout():
 def display_student(scrape_student_id):
     fetched_student = Student.query.get(scrape_student_id)
     scrapes = Scrape.query.filter_by(student_id=scrape_student_id).order_by(Scrape.date.desc()).all()
-    return render_template("/student.html", student=fetched_student, scrapes=scrapes)
+
+    fig, ax = plt.subplots()
+    points = []
+    for i in reversed(range(len(scrapes))):
+        points.append(scrapes[i].points)
+    ax.plot(points)
+    html_fig = mpld3.fig_to_html(fig)
+
+    return render_template("/student.html", student=fetched_student, scrapes=scrapes, graph=html_fig)
 
 
 @app.route('/student/<int:student_id>/edit', methods=['GET', 'POST'])
@@ -669,5 +685,4 @@ def edit_student(student_id):
 
 if __name__ == '__main__':
     db.create_all()
-
-    app.run(debug=False)
+    app.run(debug=True)
