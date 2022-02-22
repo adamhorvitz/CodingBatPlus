@@ -10,6 +10,7 @@ from flask_login import LoginManager, UserMixin, login_required, logout_user, cu
 from flask_migrate import Migrate
 from flask_mail import Mail, Message
 import json
+from pprint import pprint
 
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -36,6 +37,7 @@ login_manager.init_app(app)
 migrate = Migrate(app, db)
 mail = Mail(app)
 
+
 @app.before_first_request
 def before_first_request():
     try:
@@ -54,18 +56,20 @@ def before_first_request():
 
 def send_student_email_reports():
     students = Student.query.filter_by(isArchived=False).all()
-    # user = User.query.filter_by(id=current_user.id).first()
+    user = User.query.filter_by(id=current_user.id).first()
     date = Scrape.query.order_by(Scrape.date.desc()).first().date
     for student in students:
         scrape = Scrape.query.filter_by(student_id=student.id).filter_by(date=date).first()
-        # msg = Message("Your Weekly CodingBat Progress", sender=user.replyToEmail, recipients=[student.email])
-        body = "Hey " + student.memo + ", Here's how you're doing this week on CodingBat!\n\n"
+        msg = Message("Your Weekly CodingBat Progress", sender=user.replyToEmail, recipients=[student.email])
+        body = "Hey " + student.memo + ", here's how you're doing this week on CodingBat!\n\n"
         body += "You have " + str(scrape.points) + " points.\n"
-        body += "Since last week, you've changed by " + str(scrape.change) +" points.\n"
-        body += "Your ranking is #"+str(scrape.ranking)+".\n"
+        body += "Since last week, you've changed by " + str(scrape.change) + " points.\n"
+        body += "Your ranking is #" + str(scrape.ranking) + ".\n"
+        body += "Improve your stats for a chance to be featured in next week's teacher report!\n\n"
+        body += user.signature
         print(body)
-        # msg.body = body
-        # mail.send(msg)
+        msg.body = body
+        mail.send(msg)
 
     return "Messages sent!"
 
@@ -79,7 +83,8 @@ def send_teacher_email_reports():
         msg = Message("CodingBat+ Scrape Info", sender=user.replyToEmail, recipients=["adam.horvitz@mynbps.org"])
         body = "Hey, here's the top 5 scrapes as of " + str(date.today()) + "!\n\n"
         for scrape in scrapes:
-            body += str(scrape.student.memo) + " is #" + str(scrape.ranking) + " with " + str(scrape.points) + " points\n"
+            body += str(scrape.student.memo) + " is #" + str(scrape.ranking) + " with " + str(
+                scrape.points) + " points\n"
 
         scrapes = Scrape.query.order_by(Scrape.change.desc()).filter_by(date=date).limit(5).all()
         # If none of these are improved then don't include this part at all
@@ -197,7 +202,6 @@ def database():
     username = user.codingbat_email
     password = user.codingbat_password
 
-    home_page = None
     with Session() as s:
         header = {
             "Host": "codingbat.com",
@@ -210,33 +214,17 @@ def database():
                       "fromurl": "/java"}
         s.post("https://codingbat.com/login", data=login_data, headers=header)
         home_page = s.get("https://codingbat.com/report")
-        # print(home_page.content)
-
-    # with app.open_resource('static/CodingBat Teacher Report.html') as page:
-    #     soup = BeautifulSoup(page, 'html.parser')
-    #       #pprint(soupTest)
 
     soup = BeautifulSoup(home_page.content, 'html.parser')
-    # pprint(soup)
     tbody = soup.find_all('table')[2]
-    # pprint(tbody)
-
     emailList = []
     tr = tbody.find_all('tr')
-    # print("length of tbody is " + str(len(tr)))
 
     last_scrape_entry = Scrape.query.order_by(Scrape.date.desc()).first()
-    # print("Last scrape entry date is " + str(last_scrape_entry.date) + " and today's date is " + str(date.today()))
-    # print(last_scrape_entry is None or (last_scrape_entry is not None and last_scrape_entry.date != date.today()))
     if last_scrape_entry is None or (last_scrape_entry is not None and last_scrape_entry.date != date.today()):
         print("RUNNING DATABASE")
         for x in range(2, len(tr)):
-            # print(tr[x])
-            # email = tr.find_all(
-            #     "a", string=lambda text: "@" in text.lower()
-            # )
             row_data = tr[x].findAll("td")
-            # print("Row data is " + str(row_data))
             email = row_data[0].findAll(text=True)[0]
             memo = row_data[1].findAll(text=True)
             points = row_data[-1].findAll(text=True)
@@ -270,46 +258,61 @@ def database():
                 student=student,
                 points=points
             )
-            # print(scrape)
 
             # 5. Commit and add to database
 
-            # pprint(student.email + ", " + student.memo + ", " + str(student.points) + ", " + str(student.date))
-            # db.session.add(student)
             db.session.add(scrape)
 
             emailList.append([email, memo, points])
 
-        # flash("Database updated.")
         db.session.commit()
         ranking()
         change_in_points()
-        # pprint(emailList)
 
 
 def change_in_points():
     students = Student.query.all()
-    studentChange = 0
 
     for student in students:
         studentPoints = []
-        scrapes = Scrape.query.order_by(Scrape.date.desc()).filter_by(student_id=student.id).all()
+        scrapes = Scrape.query.order_by(Scrape.date).filter_by(student_id=student.id).all()
         # Order the scrapes for each student from most recent date to last
         for scrape in scrapes:
             studentPoints.append(scrape.points)
-            # print(studentPoints)
             # Calculate the difference from current scrape and the one before
-            if len(studentPoints) != 1:
-                for x in range(0, 1):
-                    # print(studentPoints[x])
-                    change = studentPoints[x] - studentPoints[x - 1]
-                    # print(change)
+            if len(studentPoints) > 1:
+                print(studentPoints)
+                change = studentPoints[-1] - studentPoints[-2]
                 scrape.change = change
-                db.session.add(scrape)
+                # db.session.add(scrape)
             else:
                 scrape.change = 0
 
+    print("Running change")
     db.session.commit()
+
+
+@app.route('/json', methods=['GET', 'POST'])
+@login_required
+
+def json_creator():
+    date = Scrape.query.order_by(Scrape.date.desc()).first().date
+    students = Student.query.all()
+    theStudents = []
+
+    for student in students:
+        scrape = Scrape.query.filter_by(student_id=student.id).filter_by(date=date).first()
+        student = {
+            "rank": scrape.ranking,
+            "points": scrape.points,
+            "change": scrape.change,
+            "memo": student.memo
+        }
+        theStudents.append(student)
+    # print(theStudents)
+    studentDict = dict(date=str(date), students=theStudents)
+    # theJson = json.dumps(studentDict)
+    return studentDict
 
 
 def ranking():
@@ -326,14 +329,15 @@ def ranking():
 
     db.session.commit()
 
-# def date_deleter():
-#     date = Scrape.query.order_by(Scrape.date.desc()).first().date
-#     scrapes = Scrape.query.filter_by(date=date).all()
-#
-#     for scrape in scrapes:
-#         db.session.delete(scrape)
-#
-#     db.session.commit()
+
+def date_deleter():
+    date = Scrape.query.order_by(Scrape.date.desc()).first().date
+    scrapes = Scrape.query.filter_by(date=date).all()
+
+    for scrape in scrapes:
+        db.session.delete(scrape)
+
+    db.session.commit()
 
 
 # def rank_all():
@@ -443,7 +447,6 @@ def settings():
         user = User.query.filter_by(id=current_user.id).first()
         username = user.codingbat_email
         password = user.codingbat_password
-        print(user.signature)
         return render_template("/settings.html", username=username, password=password, frequency=frequency, user=user)
     else:
         fetched_frequency = request.form["frequency"]
@@ -479,7 +482,7 @@ def settings():
 @login_required
 def settings_login():
     if request.method == "GET":
-       return redirect(url_for("settings"))
+        return redirect(url_for("settings"))
     else:
         fetched_username = request.form["username"]
         fetched_password = request.form["password"]
@@ -514,6 +517,18 @@ def settings_email():
         db.session.commit()
         send_teacher_email_reports()
         flash("Email successfully sent!")
+
+        return redirect(url_for("settings"))
+
+
+@app.route('/settings/studentEmail', methods=['GET', 'POST'])
+@login_required
+def settings_student_email():
+    if request.method == "GET":
+        return redirect(url_for("settings"))
+    else:
+        send_student_email_reports()
+        flash("Emails sent for each active student.")
 
         return redirect(url_for("settings"))
 
@@ -640,6 +655,7 @@ def edit_student(student_id):
         fetched_student.gradYear = request.form["gradYear"]
         fetched_student.period = request.form["period"]
         fetched_student.theClass = request.form["class"]
+        fetched_student.memo = request.form["memo"]
         if request.form.get('isArchived') == "isArchived":
             fetched_student.isArchived = True
         else:
@@ -653,5 +669,5 @@ def edit_student(student_id):
 
 if __name__ == '__main__':
     db.create_all()
-    send_student_email_reports()
-    app.run(debug=True)
+
+    app.run(debug=False)

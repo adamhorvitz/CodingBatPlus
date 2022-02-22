@@ -39,11 +39,11 @@ Settings
 
   <div class="form-group">
     <label for="username">Username</label>
-    <input type="text" class="form-control" id="username" name="username" value= {{ username }}>
+    <input type="text" class="form-control" id="username" name="username" value= "{{ username }}">
   </div>
   <div class="form-group">
     <label for="password">Password</label>
-    <input type="password" class="form-control" id="password" name="password" value= {{ password }}>
+    <input type="password" class="form-control" id="password" name="password" value= "{{ password }}">
   </div>
   </div>
   <button type="submit" class="btn btn-primary" formaction="/settings/login">Update Login Info</button>
@@ -52,31 +52,35 @@ Settings
   <div class="card">
   <div class="card-body">
     <h5 class="card-title">Email</h5>
-    <h6 class="card-subtitle mb-2 text-muted">Weekly top 5 scrape emails.</h6>
+    <h6 class="card-subtitle mb-2 text-muted">Weekly top 5 scrape emails for the teacher.</h6>
     <div class="form-group">
     <label for="emailSender">Reply To</label>
-    <input type="text" class="form-control" id="emailSender" name="emailSender" value= {{ user.replyToEmail }}>
+    <input type="text" class="form-control" id="emailSender" name="emailSender" value= "{{ user.replyToEmail }}">
   </div>
 
   <div class="form-group">
     <label for="emailTitle">Signature</label>
     <textarea class="form-control" class="form-control" id="emailTitle" name="emailTitle" rows = "2">{{ user.signature }}</textarea>
   </div>
-
-  <div class="form-check">
+<button type="submit" class="btn btn-success" formaction="/settings/email">Send Teacher Email</button><br><br>
+  <div class="form-check"><br>
   <input class="form-check-input" type="checkbox" value="" id="defaultCheck1">
   <label class="form-check-label" for="defaultCheck1">
     Student sending enabled
   </label>
-</div><br>
+</div>
 
-    <button type="submit" class="btn btn-success" formaction="/settings/email">Manually Send Email</button>
+
+    <button type="submit" class="btn btn-success" formaction="/settings/studentEmail">Send Active Student Progress Email</button>
     </div>
+
+
 
     <button type="submit" class="btn btn-primary" formaction="/settings/emailUpdate">Update Email Info</button>
 
 
   </div>
+
 </div>
 <br>
 </div>

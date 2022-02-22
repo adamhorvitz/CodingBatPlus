@@ -14,8 +14,12 @@ Student
 <b>Graduation Year:</b> <span> {{student.gradYear}} </span><br>
 <b>Class:</b> <span> {{student.theClass}} </span><br>
 <b>Period:</b> <span> {{student.period}} </span><br>
-<b>Is Archived:</b> <span> {{student.isArchived}} </span><br>
-<b>Memo:</b> <span> {{student.memo}} </span><br><br>
+{% if student.isArchived %}
+<b>Archived:</b>
+{% else %}
+<b>Active</b>
+{% endif %}
+<br><b>Memo:</b> <span> {{student.memo}} </span><br><br>
 
 <b><a href="/student/{{ student.id }}/edit" class="card-link">Edit Student Information</a></b>
 
