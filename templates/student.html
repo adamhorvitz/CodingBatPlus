@@ -5,11 +5,10 @@ Student
 {% endblock %}
 
 {% block content %}
-
-
-
-<!--<b>ID:</b> <span> {{student.id}} </span><br>-->
-<b>Email:</b> <span> {{student.email}} </span><br>
+<div class="container">
+  <div class="row row-cols-2">
+    <div class="col">
+<br><b>Email:</b> <span> {{student.email}} </span><br>
 <b>Grade:</b> <span> {{student.grade}} </span><br>
 <b>Graduation Year:</b> <span> {{student.gradYear}} </span><br>
 <b>Class:</b> <span> {{student.theClass}} </span><br>
@@ -21,8 +20,12 @@ Student
 {% endif %}
 <br><b>Memo:</b> <span> {{student.memo}} </span><br><br>
 
-<b><a href="/student/{{ student.id }}/edit" class="card-link">Edit Student Information</a></b>
+<b><a href="/student/{{ student.id }}/edit" class="card-link">Edit Student Information</a></b> </div>
 
+
+ <div class="col">{{graph | safe }}</div>
+  </div>
+</div>
 
 <br><br>
 
@@ -52,9 +55,6 @@ Student
 {% endfor %}
   </tbody>
 </table>
-
-
-{{graph | safe }}
 
 {% endblock %}
 

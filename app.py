@@ -647,11 +647,17 @@ def display_student(scrape_student_id):
     fetched_student = Student.query.get(scrape_student_id)
     scrapes = Scrape.query.filter_by(student_id=scrape_student_id).order_by(Scrape.date.desc()).all()
 
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize = (2.5,2.5))
+    ax.set_xlabel('Scrape')
+    ax.set_ylabel('Points')
+    ax.set_title('Scrape Table')
     points = []
     for i in reversed(range(len(scrapes))):
         points.append(scrapes[i].points)
     ax.plot(points)
+    plt.tight_layout()
+    plt.ylim([scrapes[-1].points-20, scrapes[-1].points+20])
+
     html_fig = mpld3.fig_to_html(fig)
 
     return render_template("/student.html", student=fetched_student, scrapes=scrapes, graph=html_fig)
@@ -680,7 +686,19 @@ def edit_student(student_id):
         db.session.commit()
 
         scrapes = Scrape.query.filter_by(student_id=student_id).order_by(Scrape.date.desc()).all()
-        return render_template("/student.html", student=fetched_student, scrapes=scrapes)
+        fig, ax = plt.subplots(figsize=(2.5, 2.5))
+        ax.set_xlabel('Scrape')
+        ax.set_ylabel('Points')
+        ax.set_title('Scrape Table')
+        points = []
+        for i in reversed(range(len(scrapes))):
+            points.append(scrapes[i].points)
+        ax.plot(points)
+        plt.tight_layout()
+        plt.ylim([scrapes[-1].points - 20, scrapes[-1].points + 20])
+
+        html_fig = mpld3.fig_to_html(fig)
+        return render_template("/student.html", student=fetched_student, scrapes=scrapes, graph=html_fig)
 
 
 if __name__ == '__main__':
