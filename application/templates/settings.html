@@ -45,6 +45,9 @@ Settings
     <label for="password">Password</label>
     <input type="password" class="form-control" id="password" name="password" value= "{{ password }}">
   </div>
+    <div class="alert alert-danger" role="alert">
+  Caution: Make sure the login works on the CodingBat website before inputting here!
+</div>
   </div>
   <button type="submit" class="btn btn-primary" formaction="/settings/login">Update Login Info</button>
 </div>
@@ -52,7 +55,7 @@ Settings
   <div class="card">
   <div class="card-body">
     <h5 class="card-title">Email</h5>
-    <h6 class="card-subtitle mb-2 text-muted">Weekly top 5 scrape emails for the teacher.</h6>
+    <h6 class="card-subtitle mb-2 text-muted">Scrape emails for the teacher and student. Frequency is the same as the database.</h6>
     <div class="form-group">
     <label for="emailSender">Reply To</label>
     <input type="text" class="form-control" id="emailSender" name="emailSender" value= "{{ user.replyToEmail }}">
@@ -63,26 +66,35 @@ Settings
     <textarea class="form-control" class="form-control" id="emailTitle" name="emailTitle" rows = "2">{{ user.signature }}</textarea>
   </div>
 <button type="submit" class="btn btn-success" formaction="/settings/email">Send Teacher Email</button><br><br>
-  <div class="form-check"><br>
-  <input class="form-check-input" type="checkbox" value="" id="defaultCheck1">
-  <label class="form-check-label" for="defaultCheck1">
-    Student sending enabled
-  </label>
+Current status: Student sending {% if user.studentEnabled %} enabled  {% else %} disabled {% endif %}
+    <br><div class="form-check form-check-inline">
+  <input class="form-check-input" type="radio" name="isEnabled" id="enabled" value="enabled">
+  <label class="form-check-label" for="enabled">Student sending enabled</label>
 </div>
 
+<div class="form-check form-check-inline">
+  <input class="form-check-input" type="radio" name="isEnabled" id="disabled" value="disabled" >
+  <label class="form-check-label" for="disabled">Student sending disabled</label>
+</div>
 
-    <button type="submit" class="btn btn-success" formaction="/settings/studentEmail">Send Active Student Progress Email</button>
-    </div>
+    <br><br><button type="submit" class="btn btn-success" formaction="/settings/studentEmail">Send Active Student Progress Email</button>
+</div>
 
 
 
     <button type="submit" class="btn btn-primary" formaction="/settings/emailUpdate">Update Email Info</button>
+    </div>
+
+
+
+
 
 
   </div>
 
 </div>
 <br>
+
 </div>
 
 </form>

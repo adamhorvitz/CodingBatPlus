@@ -47,12 +47,13 @@ def send_teacher_email_reports():
         body += "\nAnd here are the most improved!\n\n"
         body += improved
 
-    body += "\nAdam Horvitz\nNorth Broward Preparatory School"
+    body+= "\n"
+    body += user.signature
     # print(body)
     # jsonMsg = json.dumps(body)
     # # print(jsonMsg)
     msg.body = body
-    # mail.send(msg)
+    mail.send(msg)
     return "Message sent!"
 
 

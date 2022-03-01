@@ -82,6 +82,7 @@ class User(UserMixin, db.Model):
     )
 
     replyToEmail = db.Column(db.String(500), unique=False, nullable=True)
+    studentEnabled = db.Column(db.Boolean, unique=False, nullable=True, default=False)
     signature = db.Column(db.String(500), unique=False, nullable=True, default="CodingBat+ Scrape Data")
 
     def set_password(self, password):

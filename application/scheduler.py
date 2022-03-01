@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 from flask_apscheduler import APScheduler
 from requests import Session
 from .models import Frequency, User, Scrape, Student
-from .functions import ranking, change_in_points
+from .functions import ranking, change_in_points, send_teacher_email_reports
 from . import db, scheduler
 
 
@@ -90,3 +90,4 @@ def database():
         db.session.commit()
         ranking()
         change_in_points()
+        send_teacher_email_reports()

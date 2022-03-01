@@ -5,7 +5,7 @@ import mpld3
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_login import LoginManager, UserMixin, login_required, logout_user, current_user, login_user
 from .models import User, Frequency, Student, Scrape
-from .scheduler import database, scheduler
+from .scheduler import database, scheduler, frequency
 from . import db
 from .functions import send_student_email_reports, send_teacher_email_reports
 
@@ -140,6 +140,24 @@ def settings_email_update():
             user.replyToEmail = request.form["emailSender"]
         if request.form["emailTitle"] != "":
             user.signature = request.form["emailTitle"]
+        if request.form.get('isEnabled') == "enabled":
+            user.studentEnabled = True
+            scheduler.add_job(
+                func=send_student_email_reports,
+                trigger="interval",
+                days=frequency.frequency,
+                id="studentEmails",
+                name="studentEmails",
+                replace_existing=True
+            )
+            flash("Student emails added to the scheduler.")
+        else:
+            user.studentEnabled = False
+            if scheduler.get_job(id="studentEmails"):
+                scheduler.delete_job(id="studentEmails")
+            flash("Student emails removed from the scheduler.")
+
+
         db.session.commit()
         flash("Email info updated.")
 
