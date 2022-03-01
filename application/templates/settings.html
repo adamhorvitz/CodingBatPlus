@@ -68,12 +68,12 @@ Settings
 <button type="submit" class="btn btn-success" formaction="/settings/email">Send Teacher Email</button><br><br>
 Current status: Student sending {% if user.studentEnabled %} enabled  {% else %} disabled {% endif %}
     <br><div class="form-check form-check-inline">
-  <input class="form-check-input" type="radio" name="isEnabled" id="enabled" value="enabled">
+  <input class="form-check-input" type="radio" name="isEnabled" id="enabled" value="enabled" {% if user.studentEnabled %} checked {% endif %}>
   <label class="form-check-label" for="enabled">Student sending enabled</label>
 </div>
 
 <div class="form-check form-check-inline">
-  <input class="form-check-input" type="radio" name="isEnabled" id="disabled" value="disabled" >
+  <input class="form-check-input" type="radio" name="isEnabled" id="disabled" value="disabled" {% if not user.studentEnabled %} checked {% endif %}>
   <label class="form-check-label" for="disabled">Student sending disabled</label>
 </div>
 

@@ -2,6 +2,7 @@ from datetime import date
 from bs4 import BeautifulSoup
 from flask_apscheduler import APScheduler
 from requests import Session
+from flask import flash
 from .models import Frequency, User, Scrape, Student
 from .functions import ranking, change_in_points, send_teacher_email_reports
 from . import db, scheduler
@@ -24,23 +25,27 @@ def database():
     username = user.codingbat_email
     password = user.codingbat_password
 
-    with Session() as s:
-        header = {
-            "Host": "codingbat.com",
-            "Origin": "https://codingbat.com",
-            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36",
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
-            "Content-Type": "application/x-www-form-urlencoded"
-        }
-        login_data = {"uname": username, "pw": password, "dologin": "log in",
-                      "fromurl": "/java"}
-        s.post("https://codingbat.com/login", data=login_data, headers=header)
-        home_page = s.get("https://codingbat.com/report")
+    try:
+        with Session() as s:
+            header = {
+                "Host": "codingbat.com",
+                "Origin": "https://codingbat.com",
+                "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36",
+                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+                "Content-Type": "application/x-www-form-urlencoded"
+            }
+            login_data = {"uname": username, "pw": password, "dologin": "log in",
+                          "fromurl": "/java"}
+            s.post("https://codingbat.com/login", data=login_data, headers=header)
+            home_page = s.get("https://codingbat.com/report")
 
-    soup = BeautifulSoup(home_page.content, 'html.parser')
-    tbody = soup.find_all('table')[2]
-    emailList = []
-    tr = tbody.find_all('tr')
+        soup = BeautifulSoup(home_page.content, 'html.parser')
+        tbody = soup.find_all('table')[2]
+        emailList = []
+        tr = tbody.find_all('tr')
+    except:
+        flash("Incorrect CodingBat username and/or password. Update the values and try again.")
+        return
 
     last_scrape_entry = Scrape.query.order_by(Scrape.date.desc()).first()
     if last_scrape_entry is None or (last_scrape_entry is not None and last_scrape_entry.date != date.today()):

@@ -170,6 +170,11 @@ def settings_database():
     if request.method == "GET":
         return redirect(url_for("app_bp.settings"))
     else:
+        # try:
+        #     database()
+        # except:
+        #     flash("Incorrect CodingBat username and/or password. Update the values and try again.")
+
         database()
         flash("Database updated for the day.")
 
