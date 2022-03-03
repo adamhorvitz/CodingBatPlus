@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block title %}
+Leaderboards
+{% endblock %}
+
+{% block content %}
+<h1>Leaderboards</h1><br>
+
+<div class="card" style="width: 18rem;">
+  <div class="card-body">
+    <h5 class="card-title">By Period:</h5>
+      {% for period in periods: %}
+      <b><a href="/leaderboards/{{period}}" class="card-link">Period {{period}}</a></b><br>
+{% endfor %}
+  </div>
+</div>
+
+
+</br>
+<div class="card" style="width: 18rem;">
+  <div class="card-body">
+    <h5 class="card-title">By Class:</h5>
+      {% for class in classes: %}
+      <b><a href="/leaderboards/class/{{class}}" class="card-link">{{class}}</a></b><br>
+{% endfor %}
+  </div>
+</div>
+</br>
+{% endblock %}

@@ -3,6 +3,7 @@ from flask_login import LoginManager, UserMixin, login_required, logout_user, cu
 from werkzeug.security import generate_password_hash, check_password_hash
 from . import db
 
+# top people on period or class, top 10
 
 class Student(db.Model):
     id = db.Column(db.Integer, primary_key=True)

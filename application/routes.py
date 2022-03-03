@@ -253,6 +253,35 @@ def theClass(theClass):
         return render_template("class-database.html", scrapes=scrapes, theClass=theClass)
 
 
+@app_bp.route('/leaderboards', methods=['GET', 'POST'])
+@login_required
+def leaderboards():
+    students = Student.query.all()
+    date = Scrape.query.order_by(Scrape.date.desc()).first().date
+    scrapes = Scrape.query.filter_by(date=date).all()
+    periodsList = Student.query.with_entities(Student.period).distinct()
+    periods = [row.period for row in periodsList.all()]
+    classList = Student.query.with_entities(Student.theClass).distinct()
+    classes = [row.theClass for row in classList.all()]
+    return render_template("leaderboards.html", students=students, scrapes=scrapes, periods=periods, classes=classes)
+
+
+@app_bp.route('/leaderboards/<int:period>', methods=['GET', 'POST'])
+@login_required
+def leaderboards_period(period):
+    date = Scrape.query.order_by(Scrape.date.desc()).first().date
+    scrapes = Scrape.query.order_by(Scrape.points.desc()).filter_by(date=date).limit(10).all()
+    return render_template("leaderboards-period.html", scrapes=scrapes, period=period)
+
+
+@app_bp.route('/leaderboards/class/<string:theClass>', methods=['GET', 'POST'])
+@login_required
+def leaderboards_class(theClass):
+    date = Scrape.query.order_by(Scrape.date.desc()).first().date
+    scrapes = Scrape.query.order_by(Scrape.points.desc()).filter_by(date=date).limit(10).all()
+    return render_template("leaderboards-class.html", scrapes=scrapes, theClass=theClass)
+
+
 @app_bp.route("/logout")
 @login_required
 def logout():
@@ -324,8 +353,8 @@ def edit_student(student_id):
 @app_bp.route('/json', methods=['GET', 'POST'])
 @login_required
 def json_creator():
-    date = Scrape.query.order_by(Scrape.date.desc()).first().date
-    students = Student.query.all()
+    date = Scrape.query.first().date
+    students = Student.query.filter_by(isArchived=False).all()
     theStudents = []
 
     for student in students:
@@ -337,7 +366,6 @@ def json_creator():
             "memo": student.memo
         }
         theStudents.append(student)
-    # print(theStudents)
+    theStudents = sorted(theStudents, key=lambda x: (x['points']), reverse=True)
     studentDict = dict(date=str(date), students=theStudents)
-    # theJson = json.dumps(studentDict)
     return studentDict

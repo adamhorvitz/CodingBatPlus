@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}
+CodingBat+ Database
+{% endblock %}
+
+{% block content %}
+<br>
+<h1>{{theClass}} Leaderboard for {{scrapes[0].date}}</h1>
+
+<br>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th scope="col">Ranking</th>
+      <th scope="col">Memo</th>
+<!--      <th scope="col"><a href="/database" class="card-link">Email</a></b></th>-->
+      <th scope="col">Points</th>
+<!--      <th scope="col">Date Scraped</th>-->
+      <th scope="col">Change</th>
+<!--      <th scope="col">Period</th>-->
+<!--      <th scope="col">Class</th>-->
+    </tr>
+  </thead>
+  <tbody>
+  {% for scrape in scrapes %}
+   {% if scrape.student.theClass == theClass %}
+    <tr>
+      <th scope="row">{{ scrape.ranking }}</th>
+      <td><b><a href="/student/{{ scrape.student.id }}" class="card-link">{{scrape.student.memo}}</a></b></td>
+<!--      <td><b>{{scrape.student.email}}</b></td>-->
+        <td>{{scrape.points}}</td>
+<!--      <td>{{scrape.date}}</td>-->
+        <td>{{scrape.change}}</td>
+<!--      <td><b><a href="/database/{{ scrape.student.period }}" class="card-link">{{scrape.student.period}}</a></b></td>-->
+<!--            <td><b>{{scrape.student.theClass}}</b></td>-->
+
+      <td>
+</td>
+
+    <td>
+    </td>
+    </tr>
+  {% endif %}
+
+
+
+{% endfor %}
+
+  </tbody>
+</table>
+
+<br>
+
+{% endblock %}

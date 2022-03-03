@@ -96,6 +96,36 @@ def ranking():
     db.session.commit()
 
 
+def rank_class():
+    # scrapes = Scrape.query.filter_by(date=date).all()
+
+    date = Scrape.query.order_by(Scrape.date.desc()).first().date
+    scrapes = Scrape.query.order_by(Scrape.points.desc()).filter_by(date=date).all()
+    ranking = 1
+    for scrape in scrapes:
+        scrape.ranking = ranking
+        db.session.add(scrape)
+        # print(ranking)
+        ranking += 1
+
+    db.session.commit()
+
+
+def rank_period():
+    # scrapes = Scrape.query.filter_by(date=date).all()
+
+    date = Scrape.query.order_by(Scrape.date.desc()).first().date
+    scrapes = Scrape.query.order_by(Scrape.points.desc()).filter_by(date=date).all()
+    ranking = 1
+    for scrape in scrapes:
+        scrape.ranking = ranking
+        db.session.add(scrape)
+        # print(ranking)
+        ranking += 1
+
+    db.session.commit()
+
+
 def date_deleter():
     date = Scrape.query.order_by(Scrape.date.desc()).first().date
     scrapes = Scrape.query.filter_by(date=date).all()
