@@ -12,3 +12,4 @@ Flask-Migrate
 Flask-Mail
 matplotlib==3.5.1
 mpld3==0.5.7
+gunicorn
