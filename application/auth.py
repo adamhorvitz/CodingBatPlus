@@ -58,6 +58,6 @@ def signup():
             login_user(user)
             database()
             flash("User created!")
-            return redirect(url_for("app_bp. view_posts"))
+            return redirect(url_for("app_bp.view_posts"))
         flash("A user with that email already exists.")
     return render_template("signup.html")
