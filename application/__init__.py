@@ -1,9 +1,6 @@
 from datetime import date
 from os import environ
 import dotenv
-import numpy as np
-import matplotlib.pyplot as plt
-import mpld3
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 from flask import Flask, render_template, request, redirect, url_for, flash
@@ -23,7 +20,7 @@ scheduler = APScheduler()
 
 
 def init_app():
-    app = Flask(__name__)
+    app = Flask(__name__, instance_relative_config=False)
     app.config.from_object('config.Config')
     load_dotenv()
     mail.init_app(app)
@@ -48,5 +45,3 @@ def init_app():
         # app.register_blueprint(admin.admin_bp)
 
         return app
-
-

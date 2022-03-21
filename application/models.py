@@ -46,7 +46,8 @@ class Category(db.Model):
 
 
 class Frequency(db.Model):
-    frequency = db.Column(db.Integer, default=1, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
+    frequency = db.Column(db.Integer, default=1)
 
     def __repr__(self):
         return str(self.frequency)

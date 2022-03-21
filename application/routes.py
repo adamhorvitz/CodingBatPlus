@@ -17,22 +17,22 @@ app_bp = Blueprint(
 )
 
 
-@app.before_first_request
-def before_first_request():
-    try:
-        Frequency.query.all()
-    except:
-        db.create_all()
-        frequency = Frequency()
-        db.session.add(frequency)
-        db.session.commit()
-
-    try:
-        User.query.all()
-    except:
-        db.create_all()
-
-    frequency = Frequency.query.first()
+# @app.before_first_request
+# def before_first_request():
+#     try:
+#         Frequency.query.all()
+#     except:
+#         db.create_all()
+#         frequency = Frequency()
+#         db.session.add(frequency)
+#         db.session.commit()
+#
+#     try:
+#         User.query.all()
+#     except:
+#         db.create_all()
+#
+#     frequency = Frequency.query.first()
 
 
 @app_bp.route('/settings', methods=['GET', 'POST'])

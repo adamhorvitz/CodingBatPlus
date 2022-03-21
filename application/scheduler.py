@@ -9,14 +9,17 @@ from . import db, scheduler
 
 
 try:
-    Frequency.query.all()
+    frequency = Frequency.query.first()
+    if frequency is None:
+        frequency = Frequency()
+        db.session.add(frequency)
+        db.session.commit()
 except:
     db.create_all()
+    db.session.close()
     frequency = Frequency()
     db.session.add(frequency)
     db.session.commit()
-
-frequency = Frequency.query.first()
 
 
 @scheduler.task('interval', id='database', days=frequency.frequency, misfire_grace_time=900)
