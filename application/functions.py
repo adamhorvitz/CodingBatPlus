@@ -4,10 +4,12 @@ from .models import Frequency, User, Scrape, Student
 from . import db, mail
 
 
+# Send report to each active student with their individual stats and ranking
 def send_student_email_reports():
     students = Student.query.filter_by(isArchived=False).all()
     user = User.query.filter_by(id=current_user.id).first()
     date = Scrape.query.order_by(Scrape.date.desc()).first().date
+    # Go through each active student, get their points, change, and ranking and send the message
     for student in students:
         scrape = Scrape.query.filter_by(student_id=student.id).filter_by(date=date).first()
         msg = Message("Your Weekly CodingBat Progress", sender=user.replyToEmail, recipients=[student.email])
@@ -24,6 +26,7 @@ def send_student_email_reports():
     return "Messages sent!"
 
 
+# Send a report to the teacher with the top 5 students as of each scrape
 def send_teacher_email_reports():
     user = User.query.filter_by(id=current_user.id).first()
 
@@ -31,6 +34,7 @@ def send_teacher_email_reports():
     scrapes = Scrape.query.order_by(Scrape.points.desc()).filter_by(date=date).limit(5).all()
     msg = Message("CodingBat+ Scrape Info", sender='codingbatplus@gmail.com', recipients=[user.replyToEmail])
     body = "Hey, here's the top 5 scrapes as of " + str(date.today()) + "!\n\n"
+    # Go through the top 5 scrapes and concatenate the body with their ranking and points
     for scrape in scrapes:
         body += str(scrape.student.memo) + " is #" + str(scrape.ranking) + " with " + str(
             scrape.points) + " points\n"
@@ -47,21 +51,18 @@ def send_teacher_email_reports():
         body += "\nAnd here are the most improved!\n\n"
         body += improved
 
-    body+= "\n"
+    body += "\n"
     body += user.signature
-    # print(body)
-    # jsonMsg = json.dumps(body)
-    # # print(jsonMsg)
     msg.body = body
     mail.send(msg)
     return "Message sent!"
 
 
-
-
+# Calculate the change in points from the last database scrape
 def change_in_points():
     students = Student.query.all()
 
+    # Go through each student and compare their current scrape to the last one
     for student in students:
         studentPoints = []
         scrapes = Scrape.query.order_by(Scrape.date).filter_by(student_id=student.id).all()
@@ -81,12 +82,12 @@ def change_in_points():
     db.session.commit()
 
 
+# Calculate the students' rankings based on their current points
 def ranking():
-    # scrapes = Scrape.query.filter_by(date=date).all()
-
     date = Scrape.query.order_by(Scrape.date.desc()).first().date
     scrapes = Scrape.query.order_by(Scrape.points.desc()).filter_by(date=date).all()
     ranking = 1
+    # For every scrape, add their ranking to the database
     for scrape in scrapes:
         scrape.ranking = ranking
         db.session.add(scrape)
@@ -96,12 +97,12 @@ def ranking():
     db.session.commit()
 
 
+# Calculate rankings based on each student's class
 def rank_class():
-    # scrapes = Scrape.query.filter_by(date=date).all()
-
     date = Scrape.query.order_by(Scrape.date.desc()).first().date
     scrapes = Scrape.query.order_by(Scrape.points.desc()).filter_by(date=date).all()
     ranking = 1
+    # For every scrape, add their ranking to the database
     for scrape in scrapes:
         scrape.ranking = ranking
         db.session.add(scrape)
@@ -111,12 +112,13 @@ def rank_class():
     db.session.commit()
 
 
+# Calculate rankings based on each student's period
 def rank_period():
-    # scrapes = Scrape.query.filter_by(date=date).all()
 
     date = Scrape.query.order_by(Scrape.date.desc()).first().date
     scrapes = Scrape.query.order_by(Scrape.points.desc()).filter_by(date=date).all()
     ranking = 1
+    # For every scrape, add their ranking to the database
     for scrape in scrapes:
         scrape.ranking = ranking
         db.session.add(scrape)
@@ -126,6 +128,7 @@ def rank_period():
     db.session.commit()
 
 
+# For debugging purposes: go through the current date and delete all scrapes for that day
 def date_deleter():
     date = Scrape.query.order_by(Scrape.date.desc()).first().date
     scrapes = Scrape.query.filter_by(date=date).all()
@@ -134,20 +137,3 @@ def date_deleter():
         db.session.delete(scrape)
 
     db.session.commit()
-
-
-# def rank_all():
-#     # date_deleter()  # Delete the most recent date (debug)
-#
-#     # Get all scrapes in the database
-#     scrapes = Scrape.query.all()
-#
-#     # Go through each scrape and extract ALL the dates
-#     dates = set()
-#     for scrape in scrapes:
-#         dates.add(scrape.date)
-#     print(dates)
-
-
-
-

@@ -2,6 +2,7 @@ from os import environ
 from dotenv import load_dotenv
 load_dotenv()
 
+# Configuration for the application
 class Config:
     SCHEDULER_API_ENABLED = True
     SCHEDULER_TIMEZONE = "America/New_York"

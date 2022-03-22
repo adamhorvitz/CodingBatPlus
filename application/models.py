@@ -3,8 +3,7 @@ from flask_login import LoginManager, UserMixin, login_required, logout_user, cu
 from werkzeug.security import generate_password_hash, check_password_hash
 from . import db
 
-# top people on period or class, top 10
-
+# Model for Student contained in each scrape
 class Student(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(255), nullable=False)
@@ -23,6 +22,7 @@ class Student(db.Model):
         return '<Student %r>' % self.id
 
 
+# Model for each Scrape, updated every time the database runs
 class Scrape(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     points = db.Column(db.Float, nullable=False)
@@ -31,20 +31,11 @@ class Scrape(db.Model):
     ranking = db.Column(db.Integer, nullable=True)
     change = db.Column(db.Integer, nullable=True)
 
-    # student = db.relationship('Student', backref=db.backref('students', lazy=True))
-
     def __repr__(self):
         return '<Scrape %r>' % self.id
 
 
-class Category(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50), nullable=False, unique=True, autoincrement=True)
-
-    def __repr__(self):
-        return '<Category %r>' % self.name
-
-
+# Model for Frequency- how often the database runs
 class Frequency(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     frequency = db.Column(db.Integer, default=1)
@@ -53,6 +44,7 @@ class Frequency(db.Model):
         return str(self.frequency)
 
 
+# Model for User who can sign up/log in
 class User(UserMixin, db.Model):
     id = db.Column(
         db.Integer,

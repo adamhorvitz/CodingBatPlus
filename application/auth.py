@@ -17,13 +17,15 @@ def unauthorized():
     return redirect(url_for("app_bp.login"))
 
 
+# Default route, login page
 @app_bp.route('/', methods=['GET', 'POST'])
-def login():  # put application's code here
+def login():
     if request.method == 'GET':
         if current_user.is_authenticated:
             return redirect(url_for('app_bp.view_posts'))
         return render_template("login.html")
     else:
+        # Request the email and password and check if it is valid, then log the user in
         email = request.form["email"]
         user = User.query.filter_by(email=email).first()
         password = request.form["password"]
@@ -35,6 +37,7 @@ def login():  # put application's code here
         return redirect(url_for("app_bp.login"))
 
 
+# Route to sign up a new user
 @app_bp.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == "GET":

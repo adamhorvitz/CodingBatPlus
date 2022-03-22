@@ -17,24 +17,7 @@ app_bp = Blueprint(
 )
 
 
-# @app.before_first_request
-# def before_first_request():
-#     try:
-#         Frequency.query.all()
-#     except:
-#         db.create_all()
-#         frequency = Frequency()
-#         db.session.add(frequency)
-#         db.session.commit()
-#
-#     try:
-#         User.query.all()
-#     except:
-#         db.create_all()
-#
-#     frequency = Frequency.query.first()
-
-
+# Route for Settings page
 @app_bp.route('/settings', methods=['GET', 'POST'])
 @login_required
 def settings():
@@ -45,8 +28,8 @@ def settings():
         password = user.codingbat_password
         return render_template("/settings.html", username=username, password=password, frequency=frequency, user=user)
     else:
+        # Get the changedfrequency and update it to either month, week, or daily
         fetched_frequency = request.form["frequency"]
-
         user = User.query.filter_by(id=current_user.id).first()
         frequency = Frequency.query.first()
 
@@ -58,6 +41,7 @@ def settings():
             frequency.frequency = 1
         flash("Frequency updated to every " + str(frequency.frequency) + " day(s)")
 
+        # Update the scheduler with the NEW frequency
         scheduler.add_job(
             func=database,
             trigger="interval",
@@ -74,12 +58,14 @@ def settings():
         return render_template("/settings.html", username=username, password=password, frequency=frequency, user=user)
 
 
+# Route for the Settings page changing the login information
 @app_bp.route('/settings/login', methods=['GET', 'POST'])
 @login_required
 def settings_login():
     if request.method == "GET":
         return redirect(url_for("app_bp.settings"))
     else:
+        #Get the user inputted username and password and update their email with it
         fetched_username = request.form["username"]
         fetched_password = request.form["password"]
         user = User.query.filter_by(id=current_user.id).first()
@@ -99,12 +85,14 @@ def settings_login():
         return render_template("/settings.html", username=username, password=password, frequency=frequency, user=user)
 
 
+# Route for the Settings page containing the teacher email information
 @app_bp.route('/settings/email', methods=['GET', 'POST'])
 @login_required
 def settings_email():
     if request.method == "GET":
         return redirect(url_for("app_bp.settings"))
     else:
+        # Get the user's email information and manually send out teacher reports
         user = User.query.filter_by(id=current_user.id).first()
         if request.form["emailSender"] != "":
             user.replyToEmail = request.form["emailSender"]
@@ -117,24 +105,28 @@ def settings_email():
         return redirect(url_for("app_bp.settings"))
 
 
+# Route for the Settings page containing the student email information
 @app_bp.route('/settings/studentEmail', methods=['GET', 'POST'])
 @login_required
 def settings_student_email():
     if request.method == "GET":
         return redirect(url_for("app_bp.settings"))
     else:
+        # Send student reports for each active student
         send_student_email_reports()
         flash("Emails sent for each active student.")
 
         return redirect(url_for("app_bp.settings"))
 
 
+# Route for the Settings page changing the email information
 @app_bp.route('/settings/emailUpdate', methods=['GET', 'POST'])
 @login_required
 def settings_email_update():
     if request.method == "GET":
         return redirect(url_for("settings"))
     else:
+        # Get the current user, change the email sender and title to the form inputted
         user = User.query.filter_by(id=current_user.id).first()
         if request.form["emailSender"] != "":
             user.replyToEmail = request.form["emailSender"]
@@ -142,6 +134,7 @@ def settings_email_update():
             user.signature = request.form["emailTitle"]
         if request.form.get('isEnabled') == "enabled":
             user.studentEnabled = True
+            # Update the scheduler with the student reports
             scheduler.add_job(
                 func=send_student_email_reports,
                 trigger="interval",
@@ -157,36 +150,31 @@ def settings_email_update():
                 scheduler.delete_job(id="studentEmails")
             flash("Student emails removed from the scheduler.")
 
-
         db.session.commit()
         flash("Email info updated.")
 
         return redirect(url_for("app_bp.settings"))
 
 
+# Route for the Settings page containing the database  information
 @app_bp.route('/settings/database', methods=['GET', 'POST'])
 @login_required
 def settings_database():
     if request.method == "GET":
         return redirect(url_for("app_bp.settings"))
     else:
-        # try:
-        #     database()
-        # except:
-        #     flash("Incorrect CodingBat username and/or password. Update the values and try again.")
-
+        # Run the database for the day if the user manually clicks it
         database()
         flash("Database updated for the day.")
-
         return redirect(url_for("app_bp.settings"))
 
 
+# Route for the Database page containing the current day's scrape information
 @app_bp.route('/database', methods=['GET', 'POST'])
 @login_required
 def view_posts():
     if request.method == "GET":
-        # # print("opening database.html")
-        # database()
+        # Check if students exist; if they don't, run the database for the first time
         try:
             students = Student.query.all()
             date = Scrape.query.order_by(Scrape.date.desc()).first().date
@@ -195,35 +183,34 @@ def view_posts():
             print('Running exception')
             students = Student.query.all()
             date = Scrape.query.order_by(Scrape.date.desc()).first().date
-        # print("Most recent scrape is from " + str(date))
         scrapes = Scrape.query.filter_by(date=date).all()
-        # print(scrapes[0].student.id)
         return render_template("database.html", posts=students, scrapes=scrapes)
 
-
+# Route for the Archived Database page containing the current day's archived student information
 @app_bp.route('/database/archive', methods=['GET', 'POST'])
 @login_required
 def view_archived():
     if request.method == "GET":
+        # Get all the students
         students = Student.query.all()
         date = Scrape.query.order_by(Scrape.date.desc()).first().date
         scrapes = Scrape.query.filter_by(date=date).all()
         return render_template("archive-database.html", posts=students, scrapes=scrapes)
 
 
+# Route for the Database page containing the current day's scrape information sorted by points
 @app_bp.route('/database/points', methods=['GET', 'POST'])
 @login_required
 def points():
     if request.method == "GET":
-        # database()
         students = Student.query.all()
-        # points = Scrape.query.order_by(Scrape.points).first().points
         date = Scrape.query.order_by(Scrape.date.desc()).first().date
         scrapes = Scrape.query.order_by(Scrape.points.desc()).filter_by(date=date).all()
 
         return render_template("database.html", posts=students, scrapes=scrapes)
 
 
+# Route for the Database page containing the current day's scrape information sorted by change
 @app_bp.route('/database/change', methods=['GET', 'POST'])
 @login_required
 def change():
@@ -234,7 +221,7 @@ def change():
 
         return render_template("database.html", posts=students, scrapes=scrapes)
 
-
+# Route for the Database page containing the current day's scrape information filtered by period
 @app_bp.route('/database/<int:period>', methods=['GET', 'POST'])
 @login_required
 def period(period):
@@ -244,6 +231,7 @@ def period(period):
         return render_template("period-database.html", scrapes=scrapes, period=period)
 
 
+# Route for the Database page containing the current day's scrape information filtered by class
 @app_bp.route('/database/view/<string:theClass>', methods=['GET', 'POST'])
 @login_required
 def theClass(theClass):
@@ -253,6 +241,7 @@ def theClass(theClass):
         return render_template("class-database.html", scrapes=scrapes, theClass=theClass)
 
 
+# Route for the Leaderboards page containing lists of each period and class
 @app_bp.route('/leaderboards', methods=['GET', 'POST'])
 @login_required
 def leaderboards():
@@ -266,6 +255,7 @@ def leaderboards():
     return render_template("leaderboards.html", students=students, scrapes=scrapes, periods=periods, classes=classes)
 
 
+# Route for the Leaderboard page containing the top 10 leaderboard filtered by period
 @app_bp.route('/leaderboards/<int:period>', methods=['GET', 'POST'])
 @login_required
 def leaderboards_period(period):
@@ -274,6 +264,7 @@ def leaderboards_period(period):
     return render_template("leaderboards-period.html", scrapes=scrapes, period=period)
 
 
+# Route for the Leaderboard page containing the top 10 leaderboard filtered by class
 @app_bp.route('/leaderboards/class/<string:theClass>', methods=['GET', 'POST'])
 @login_required
 def leaderboards_class(theClass):
@@ -282,6 +273,7 @@ def leaderboards_class(theClass):
     return render_template("leaderboards-class.html", scrapes=scrapes, theClass=theClass)
 
 
+# Log out the current user
 @app_bp.route("/logout")
 @login_required
 def logout():
@@ -289,14 +281,15 @@ def logout():
     flash("Logged out.")
     return redirect(url_for("app_bp.login"))
 
-
+# Route for the Student page containing all of the scrapes per student and their information
 @app_bp.route('/student/<int:scrape_student_id>', methods=['GET', 'POST'])
 @login_required
 def display_student(scrape_student_id):
     fetched_student = Student.query.get(scrape_student_id)
     scrapes = Scrape.query.filter_by(student_id=scrape_student_id).order_by(Scrape.date.desc()).all()
 
-    fig, ax = plt.subplots(figsize = (2.5,2.5))
+    # Using subplots, create a plot with the students' scrape and points
+    fig, ax = plt.subplots(figsize=(2.5, 2.5))
     ax.set_xlabel('Scrape')
     ax.set_ylabel('Points')
     ax.set_title('Scrape Table')
@@ -305,13 +298,13 @@ def display_student(scrape_student_id):
         points.append(scrapes[i].points)
     ax.plot(points)
     plt.tight_layout()
-    plt.ylim([scrapes[-1].points-20, scrapes[-1].points+20])
+    plt.ylim([scrapes[-1].points - 20, scrapes[-1].points + 20])
 
     html_fig = mpld3.fig_to_html(fig)
 
     return render_template("/student.html", student=fetched_student, scrapes=scrapes, graph=html_fig)
 
-
+# Route for the student page with an option to edit their information
 @app_bp.route('/student/<int:student_id>/edit', methods=['GET', 'POST'])
 @login_required
 def edit_student(student_id):
@@ -320,6 +313,7 @@ def edit_student(student_id):
         scrapes = Scrape.query.filter_by(student_id=student_id).order_by(Scrape.date.desc()).all()
         return render_template("/student-edit.html", student=fetched_student, scrapes=scrapes)
     else:
+        # Get all of the changed info and update the students' parameters with the fetched forms
         fetched_student = Student.query.get(student_id)
         fetched_student.email = request.form["email"]
         fetched_student.grade = request.form["grade"]
@@ -333,7 +327,7 @@ def edit_student(student_id):
             fetched_student.isArchived = False
         flash("Student info updated.")
         db.session.commit()
-
+        # Using subplots, create a plot with the students' scrape and points
         scrapes = Scrape.query.filter_by(student_id=student_id).order_by(Scrape.date.desc()).all()
         fig, ax = plt.subplots(figsize=(2.5, 2.5))
         ax.set_xlabel('Scrape')
@@ -349,14 +343,14 @@ def edit_student(student_id):
         html_fig = mpld3.fig_to_html(fig)
         return render_template("/student.html", student=fetched_student, scrapes=scrapes, graph=html_fig)
 
-
+# Route for JSON object of each student's rank, points, change, and memo
 @app_bp.route('/json', methods=['GET', 'POST'])
 @login_required
 def json_creator():
     date = Scrape.query.first().date
     students = Student.query.filter_by(isArchived=False).all()
     theStudents = []
-
+    # Go through each student and create a dictionary of their info
     for student in students:
         scrape = Scrape.query.filter_by(student_id=student.id).filter_by(date=date).first()
         student = {
@@ -366,6 +360,7 @@ def json_creator():
             "memo": student.memo
         }
         theStudents.append(student)
+    # Create a dictionary of dictionaries for the student and return it
     theStudents = sorted(theStudents, key=lambda x: (x['points']), reverse=True)
     studentDict = dict(date=str(date), students=theStudents)
     return studentDict
