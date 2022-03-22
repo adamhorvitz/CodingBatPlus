@@ -1,5 +1,9 @@
 https://hackersandslackers.com/flask-login-user-authentication/
+https://hackersandslackers.com/flask-blueprints/
 https://flask-login.readthedocs.io/en/latest/#how-it-works
 https://mailtrap.io/blog/flask-email-sending/#Sending-emails-in-Flask
 https://stackoverflow.com/questions/22275412/sqlalchemy-return-all-distinct-column-values
 https://stackoverflow.com/questions/51776799/python-how-to-sort-list-of-dictionaries-by-value-and-index
+https://www.geeksforgeeks.org/change-axis-labels-set-title-and-figure-size-to-plots-with-seaborn/
+https://www.w3schools.com/python/matplotlib_pyplot.asp
+https://realpython.com/beautiful-soup-web-scraper-python/
