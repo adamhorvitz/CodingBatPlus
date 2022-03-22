@@ -29,7 +29,7 @@ def send_teacher_email_reports():
 
     date = Scrape.query.order_by(Scrape.date.desc()).first().date
     scrapes = Scrape.query.order_by(Scrape.points.desc()).filter_by(date=date).limit(5).all()
-    msg = Message("CodingBat+ Scrape Info", sender=user.replyToEmail, recipients=["adam.horvitz@mynbps.org"])
+    msg = Message("CodingBat+ Scrape Info", sender='codingbatplus@gmail.com', recipients=[user.replyToEmail])
     body = "Hey, here's the top 5 scrapes as of " + str(date.today()) + "!\n\n"
     for scrape in scrapes:
         body += str(scrape.student.memo) + " is #" + str(scrape.ranking) + " with " + str(
