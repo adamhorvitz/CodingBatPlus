@@ -1,3 +1,5 @@
+from datetime import date
+
 from flask import Blueprint
 from flask import current_app as app
 import matplotlib.pyplot as plt
@@ -22,13 +24,14 @@ app_bp = Blueprint(
 @login_required
 def settings():
     if request.method == "GET":
+        print(date.today())
         frequency = Frequency.query.first().frequency
         user = User.query.filter_by(id=current_user.id).first()
         username = user.codingbat_email
         password = user.codingbat_password
         return render_template("/settings.html", username=username, password=password, frequency=frequency, user=user)
     else:
-        # Get the changedfrequency and update it to either month, week, or daily
+        # Get the changed frequency and update it to either month, week, or daily
         fetched_frequency = request.form["frequency"]
         user = User.query.filter_by(id=current_user.id).first()
         frequency = Frequency.query.first()
@@ -343,12 +346,13 @@ def edit_student(student_id):
         html_fig = mpld3.fig_to_html(fig)
         return render_template("/student.html", student=fetched_student, scrapes=scrapes, graph=html_fig)
 
+
 # Route for JSON object of each student's rank, points, change, and memo
 @app_bp.route('/json', methods=['GET', 'POST'])
 @login_required
 def json_creator():
-    date = Scrape.query.first().date
-    students = Student.query.filter_by(isArchived=False).all()
+    date = Scrape.query.first().date # Access database and query Scrapes
+    students = Student.query.filter_by(isArchived=False).all() # Filter Students by not archived
     theStudents = []
     # Go through each student and create a dictionary of their info
     for student in students:
@@ -359,8 +363,8 @@ def json_creator():
             "change": scrape.change,
             "memo": student.memo
         }
-        theStudents.append(student)
+        theStudents.append(student) # Add each student to the dictionary
     # Create a dictionary of dictionaries for the student and return it
     theStudents = sorted(theStudents, key=lambda x: (x['points']), reverse=True)
     studentDict = dict(date=str(date), students=theStudents)
-    return studentDict
+    return studentDict # Return as JSON object

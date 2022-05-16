@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 from requests import Session
 from flask import flash
 from .models import Frequency, User, Scrape, Student
-from .functions import ranking, change_in_points, send_teacher_email_reports
+from .functions import change_in_points, send_teacher_email_reports
 from . import db, scheduler
 
 # Check if the frequency already exists; if not, create it
@@ -47,6 +47,7 @@ def database():
         tbody = soup.find_all('table')[2]
         emailList = []
         tr = tbody.find_all('tr')
+        print(tr)
     except:
         flash("Incorrect CodingBat username and/or password. Update the values and try again.")
         return
@@ -100,7 +101,7 @@ def database():
 
         db.session.commit()
         # Calculate the ranking and change for each student
-        ranking()
+        Scrape.calc_ranking()
         change_in_points()
         # Send the reports to the teacher for the current scrape
         send_teacher_email_reports()

@@ -43,6 +43,8 @@ def send_teacher_email_reports():
     # If none of these are improved then don't include this part at all
     improved = ""
     counter = 0
+    # For each scrape in the top 5 scrapes, if the points have changed since the last scrape, update the body of the
+    # message
     for scrape in scrapes:
         if scrape.change > 0:
             improved += str(scrape.student.memo) + " has changed by " + str(scrape.change) + " points\n"
@@ -82,58 +84,6 @@ def change_in_points():
     db.session.commit()
 
 
-# Calculate the students' rankings based on their current points
-def ranking():
-    date = Scrape.query.order_by(Scrape.date.desc()).first().date
-    scrapes = Scrape.query.order_by(Scrape.points.desc()).filter_by(date=date).all()
-    ranking = 1
-    # For every scrape, add their ranking to the database
-    for scrape in scrapes:
-        scrape.ranking = ranking
-        db.session.add(scrape)
-        # print(ranking)
-        ranking += 1
-
-    db.session.commit()
 
 
-# Calculate rankings based on each student's class
-def rank_class():
-    date = Scrape.query.order_by(Scrape.date.desc()).first().date
-    scrapes = Scrape.query.order_by(Scrape.points.desc()).filter_by(date=date).all()
-    ranking = 1
-    # For every scrape, add their ranking to the database
-    for scrape in scrapes:
-        scrape.ranking = ranking
-        db.session.add(scrape)
-        # print(ranking)
-        ranking += 1
 
-    db.session.commit()
-
-
-# Calculate rankings based on each student's period
-def rank_period():
-
-    date = Scrape.query.order_by(Scrape.date.desc()).first().date
-    scrapes = Scrape.query.order_by(Scrape.points.desc()).filter_by(date=date).all()
-    ranking = 1
-    # For every scrape, add their ranking to the database
-    for scrape in scrapes:
-        scrape.ranking = ranking
-        db.session.add(scrape)
-        # print(ranking)
-        ranking += 1
-
-    db.session.commit()
-
-
-# For debugging purposes: go through the current date and delete all scrapes for that day
-def date_deleter():
-    date = Scrape.query.order_by(Scrape.date.desc()).first().date
-    scrapes = Scrape.query.filter_by(date=date).all()
-
-    for scrape in scrapes:
-        db.session.delete(scrape)
-
-    db.session.commit()

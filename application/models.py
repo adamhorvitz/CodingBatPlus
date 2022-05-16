@@ -31,6 +31,32 @@ class Scrape(db.Model):
     ranking = db.Column(db.Integer, nullable=True)
     change = db.Column(db.Integer, nullable=True)
 
+    # For debugging purposes: go through the current date and delete all scrapes for that day
+    @staticmethod
+    def date_deleter(date):
+        scrapes = Scrape.query.filter_by(date=date).all()
+
+        for scrape in scrapes:
+            db.session.delete(scrape)
+
+        db.session.commit()
+
+    # Calculate the students' rankings based on their current points
+    @staticmethod
+    def calc_ranking():
+        date = Scrape.query.order_by(Scrape.date.desc()).first().date
+        scrapes = Scrape.query.order_by(Scrape.points.desc()).filter_by(date=date).all()
+        rankingCount = 1
+        # For every scrape, add their ranking to the database
+        for scrape in scrapes:
+            scrape.ranking = rankingCount
+            db.session.add(scrape)
+            # print(ranking)
+            rankingCount += 1
+
+        print("Ranking calculated")
+        db.session.commit()
+
     def __repr__(self):
         return '<Scrape %r>' % self.id
 
@@ -92,3 +118,36 @@ class User(UserMixin, db.Model):
 
     def __repr__(self):
         return '<User {}>'.format(self.username)
+
+
+
+
+    # # Calculate rankings based on each student's class
+    # @staticmethod
+    # def rank_class():
+    #     date = Scrape.query.order_by(Scrape.date.desc()).first().date
+    #     scrapes = Scrape.query.order_by(Scrape.points.desc()).filter_by(date=date).all()
+    #     ranking = 1
+    #     # For every scrape, add their ranking to the database
+    #     for scrape in scrapes:
+    #         scrape.ranking = ranking
+    #         db.session.add(scrape)
+    #         # print(ranking)
+    #         ranking += 1
+    #
+    #     db.session.commit()
+    #
+    # # Calculate rankings based on each student's period
+    # @staticmethod
+    # def rank_period():
+    #     date = Scrape.query.order_by(Scrape.date.desc()).first().date
+    #     scrapes = Scrape.query.order_by(Scrape.points.desc()).filter_by(date=date).all()
+    #     ranking = 1
+    #     # For every scrape, add their ranking to the database
+    #     for scrape in scrapes:
+    #         scrape.ranking = ranking
+    #         db.session.add(scrape)
+    #         # print(ranking)
+    #         ranking += 1
+    #
+    #     db.session.commit()

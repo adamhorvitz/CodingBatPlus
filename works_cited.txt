@@ -7,3 +7,4 @@ https://stackoverflow.com/questions/51776799/python-how-to-sort-list-of-dictiona
 https://www.geeksforgeeks.org/change-axis-labels-set-title-and-figure-size-to-plots-with-seaborn/
 https://www.w3schools.com/python/matplotlib_pyplot.asp
 https://realpython.com/beautiful-soup-web-scraper-python/
+https://apscheduler.readthedocs.io/en/3.x/
