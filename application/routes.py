@@ -1,15 +1,15 @@
 from datetime import date
 
-from flask import Blueprint
-from flask import current_app as app
 import matplotlib.pyplot as plt
 import mpld3
-from flask import Flask, render_template, request, redirect, url_for, flash
-from flask_login import LoginManager, UserMixin, login_required, logout_user, current_user, login_user
-from .models import User, Frequency, Student, Scrape
-from .scheduler import database, scheduler, frequency
+from flask import Blueprint
+from flask import render_template, request, redirect, url_for, flash
+from flask_login import login_required, logout_user, current_user
+
 from . import db
 from .functions import send_student_email_reports, send_teacher_email_reports
+from .models import User, Frequency, Student, Scrape
+from .scheduler import database, scheduler, frequency
 
 # Blueprint Configuration
 app_bp = Blueprint(

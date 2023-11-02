@@ -1,10 +1,10 @@
-requests~=2.26.0
+requests
 beautifulsoup4~=4.10.0
-Flask~=2.0.2
-Flask-SQLAlchemy~=2.5.1
+Flask~=2.2.2
+Flask-SQLAlchemy
 python-dotenv==0.19.2
 DateTime==4.3
-Werkzeug==2.0.2
+Werkzeug
 Flask-APScheduler
 flask-login
 psycopg2-binary
